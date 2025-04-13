@@ -1,4 +1,3 @@
-import axios from 'axios';
 import {
   AUTH_START,
   AUTH_SUCCESS,
@@ -7,178 +6,190 @@ import {
   REGISTER_START,
   REGISTER_SUCCESS,
   REGISTER_FAIL,
-  UPDATE_PROFILE_START,
   UPDATE_PROFILE_SUCCESS,
-  UPDATE_PROFILE_FAIL
+  UPDATE_PROFILE_FAIL,
+  SET_ALERT
 } from './actionTypes';
-import { setAlert } from './uiActions';
-
-// API Base URL
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
-
-// Setup axios config with token
-const setupConfig = () => {
-  const token = localStorage.getItem('token');
-  return {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: token ? `Bearer ${token}` : ''
-    }
-  };
-};
+import api from '../../services/apiService';
 
 // Login user
 export const login = (email, password) => async (dispatch) => {
-  dispatch({ type: AUTH_START });
-
   try {
-    const res = await axios.post(`${API_URL}/auth/login`, { email, password });
-    
+    dispatch({ type: AUTH_START });
+
+    const res = await api.post('/auth/login', { email, password });
+
     // Store token in localStorage
     localStorage.setItem('token', res.data.token);
-    
+
     dispatch({
       type: AUTH_SUCCESS,
       payload: res.data
     });
-    
-    dispatch(setAlert('Login successful', 'success'));
+
+    dispatch({
+      type: SET_ALERT,
+      payload: {
+        id: new Date().getTime(),
+        type: 'success',
+        message: 'Login successful!'
+      }
+    });
   } catch (err) {
-    const errorMessage = err.response && err.response.data.message
-      ? err.response.data.message
-      : 'Login failed. Please check your credentials.';
-    
     dispatch({
       type: AUTH_FAIL,
-      payload: errorMessage
+      payload: err.response?.data?.message || 'Login failed. Please check your credentials.'
     });
-    
-    dispatch(setAlert(errorMessage, 'error'));
+
+    dispatch({
+      type: SET_ALERT,
+      payload: {
+        id: new Date().getTime(),
+        type: 'error',
+        message: err.response?.data?.message || 'Login failed. Please check your credentials.'
+      }
+    });
   }
 };
 
 // Register user
 export const register = (userData) => async (dispatch) => {
-  dispatch({ type: REGISTER_START });
-
   try {
-    const res = await axios.post(`${API_URL}/auth/register`, userData);
-    
+    dispatch({ type: REGISTER_START });
+
+    const res = await api.post('/auth/register', userData);
+
     // Store token in localStorage
     localStorage.setItem('token', res.data.token);
-    
+
     dispatch({
       type: REGISTER_SUCCESS,
       payload: res.data
     });
-    
-    dispatch(setAlert('Registration successful', 'success'));
+
+    dispatch({
+      type: SET_ALERT,
+      payload: {
+        id: new Date().getTime(),
+        type: 'success',
+        message: 'Registration successful!'
+      }
+    });
   } catch (err) {
-    const errorMessage = err.response && err.response.data.message
-      ? err.response.data.message
-      : 'Registration failed. Please try again.';
-    
     dispatch({
       type: REGISTER_FAIL,
-      payload: errorMessage
+      payload: err.response?.data?.message || 'Registration failed. Please try again.'
     });
-    
-    dispatch(setAlert(errorMessage, 'error'));
+
+    dispatch({
+      type: SET_ALERT,
+      payload: {
+        id: new Date().getTime(),
+        type: 'error',
+        message: err.response?.data?.message || 'Registration failed. Please try again.'
+      }
+    });
   }
 };
 
 // Logout user
 export const logout = () => (dispatch) => {
+  // Remove token from localStorage
+  localStorage.removeItem('token');
+
   dispatch({ type: AUTH_LOGOUT });
-  dispatch(setAlert('Logged out successfully', 'success'));
+
+  dispatch({
+    type: SET_ALERT,
+    payload: {
+      id: new Date().getTime(),
+      type: 'success',
+      message: 'Logged out successfully!'
+    }
+  });
 };
 
-// Get current user
+// Check if user is authenticated
 export const checkAuth = () => async (dispatch) => {
-  if (!localStorage.getItem('token')) {
-    dispatch({ type: AUTH_FAIL });
-    return;
-  }
-
-  dispatch({ type: AUTH_START });
-
   try {
-    const res = await axios.get(`${API_URL}/auth/me`, setupConfig());
-    
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      dispatch({ type: AUTH_LOGOUT });
+      return;
+    }
+
+    dispatch({ type: AUTH_START });
+
+    const res = await api.get('/auth/me');
+
     dispatch({
       type: AUTH_SUCCESS,
-      payload: {
-        token: localStorage.getItem('token'),
-        user: res.data.data.user
-      }
+      payload: { user: res.data, token }
     });
   } catch (err) {
-    dispatch({ type: AUTH_FAIL });
+    // If token is invalid, remove it
     localStorage.removeItem('token');
+    dispatch({ type: AUTH_LOGOUT });
   }
 };
 
 // Update user profile
 export const updateProfile = (profileData) => async (dispatch) => {
-  dispatch({ type: UPDATE_PROFILE_START });
-
   try {
-    const res = await axios.patch(
-      `${API_URL}/users/profile`,
-      profileData,
-      setupConfig()
-    );
-    
+    const res = await api.put('/users/me/profile', profileData);
+
     dispatch({
       type: UPDATE_PROFILE_SUCCESS,
-      payload: res.data.data.user
+      payload: res.data
     });
-    
-    dispatch(setAlert('Profile updated successfully', 'success'));
+
+    dispatch({
+      type: SET_ALERT,
+      payload: {
+        id: new Date().getTime(),
+        type: 'success',
+        message: 'Profile updated successfully!'
+      }
+    });
   } catch (err) {
-    const errorMessage = err.response && err.response.data.message
-      ? err.response.data.message
-      : 'Profile update failed. Please try again.';
-    
     dispatch({
       type: UPDATE_PROFILE_FAIL,
-      payload: errorMessage
+      payload: err.response?.data?.message || 'Failed to update profile'
     });
-    
-    dispatch(setAlert(errorMessage, 'error'));
+
+    dispatch({
+      type: SET_ALERT,
+      payload: {
+        id: new Date().getTime(),
+        type: 'error',
+        message: err.response?.data?.message || 'Failed to update profile'
+      }
+    });
   }
 };
 
 // Update user password
-export const updatePassword = (passwordData) => async (dispatch) => {
-  dispatch({ type: AUTH_START });
-
+export const updatePassword = (oldPassword, newPassword) => async (dispatch) => {
   try {
-    const res = await axios.patch(
-      `${API_URL}/auth/updatepassword`,
-      passwordData,
-      setupConfig()
-    );
-    
-    // Update token in localStorage
-    localStorage.setItem('token', res.data.token);
-    
+    await api.put('/users/me/password', { oldPassword, newPassword });
+
     dispatch({
-      type: AUTH_SUCCESS,
-      payload: res.data
+      type: SET_ALERT,
+      payload: {
+        id: new Date().getTime(),
+        type: 'success',
+        message: 'Password updated successfully!'
+      }
     });
-    
-    dispatch(setAlert('Password updated successfully', 'success'));
   } catch (err) {
-    const errorMessage = err.response && err.response.data.message
-      ? err.response.data.message
-      : 'Password update failed. Please try again.';
-    
     dispatch({
-      type: AUTH_FAIL,
-      payload: errorMessage
+      type: SET_ALERT,
+      payload: {
+        id: new Date().getTime(),
+        type: 'error',
+        message: err.response?.data?.message || 'Failed to update password'
+      }
     });
-    
-    dispatch(setAlert(errorMessage, 'error'));
   }
 }; 

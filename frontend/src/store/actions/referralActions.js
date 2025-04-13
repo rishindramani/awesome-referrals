@@ -13,7 +13,7 @@ import {
   REFERRAL_UPDATE_SUCCESS,
   REFERRAL_UPDATE_ERROR,
   REFERRAL_NOTE_ADD_SUCCESS
-} from '../actions/actionTypes';
+} from './actionTypes';
 import { setAlert } from './uiActions';
 
 // API base URL
@@ -25,13 +25,7 @@ export const getReferrals = () => async (dispatch, getState) => {
     dispatch({ type: REFERRALS_LOADING });
     
     const { token } = getState().auth;
-    
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    };
+    const config = { headers: { 'Authorization': `Bearer ${token}` } };
     
     const res = await axios.get(`${API_URL}/referrals`, config);
     
@@ -40,10 +34,7 @@ export const getReferrals = () => async (dispatch, getState) => {
       payload: res.data
     });
   } catch (err) {
-    const errorMessage = 
-      err.response && err.response.data.message 
-        ? err.response.data.message 
-        : 'Failed to fetch referrals';
+    const errorMessage = err.response?.data?.message || 'Failed to fetch referrals';
         
     dispatch({
       type: REFERRALS_ERROR,
@@ -60,13 +51,7 @@ export const getReferralById = (id) => async (dispatch, getState) => {
     dispatch({ type: REFERRAL_DETAIL_LOADING });
     
     const { token } = getState().auth;
-    
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    };
+    const config = { headers: { 'Authorization': `Bearer ${token}` } };
     
     const res = await axios.get(`${API_URL}/referrals/${id}`, config);
     
@@ -75,10 +60,7 @@ export const getReferralById = (id) => async (dispatch, getState) => {
       payload: res.data
     });
   } catch (err) {
-    const errorMessage = 
-      err.response && err.response.data.message 
-        ? err.response.data.message 
-        : 'Failed to fetch referral details';
+    const errorMessage = err.response?.data?.message || 'Failed to fetch referral details';
         
     dispatch({
       type: REFERRAL_DETAIL_ERROR,
@@ -95,13 +77,7 @@ export const createReferralRequest = (referralData, navigate) => async (dispatch
     dispatch({ type: REFERRAL_CREATE_LOADING });
     
     const { token } = getState().auth;
-    
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    };
+    const config = { headers: { 'Authorization': `Bearer ${token}` } };
     
     const res = await axios.post(`${API_URL}/referrals`, referralData, config);
     
@@ -117,10 +93,7 @@ export const createReferralRequest = (referralData, navigate) => async (dispatch
       navigate('/referrals');
     }
   } catch (err) {
-    const errorMessage = 
-      err.response && err.response.data.message 
-        ? err.response.data.message 
-        : 'Failed to create referral request';
+    const errorMessage = err.response?.data?.message || 'Failed to create referral request';
         
     dispatch({
       type: REFERRAL_CREATE_ERROR,
@@ -137,19 +110,9 @@ export const updateReferralStatus = (id, status) => async (dispatch, getState) =
     dispatch({ type: REFERRAL_UPDATE_LOADING });
     
     const { token } = getState().auth;
+    const config = { headers: { 'Authorization': `Bearer ${token}` } };
     
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    };
-    
-    const res = await axios.put(
-      `${API_URL}/referrals/${id}/status`, 
-      { status }, 
-      config
-    );
+    const res = await axios.put(`${API_URL}/referrals/${id}/status`, { status }, config);
     
     dispatch({
       type: REFERRAL_UPDATE_SUCCESS,
@@ -173,10 +136,7 @@ export const updateReferralStatus = (id, status) => async (dispatch, getState) =
     
     dispatch(setAlert(message, 'success'));
   } catch (err) {
-    const errorMessage = 
-      err.response && err.response.data.message 
-        ? err.response.data.message 
-        : 'Failed to update referral status';
+    const errorMessage = err.response?.data?.message || 'Failed to update referral status';
         
     dispatch({
       type: REFERRAL_UPDATE_ERROR,
@@ -191,19 +151,9 @@ export const updateReferralStatus = (id, status) => async (dispatch, getState) =
 export const addReferralNote = (id, note) => async (dispatch, getState) => {
   try {
     const { token } = getState().auth;
+    const config = { headers: { 'Authorization': `Bearer ${token}` } };
     
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    };
-    
-    const res = await axios.post(
-      `${API_URL}/referrals/${id}/notes`, 
-      { note }, 
-      config
-    );
+    const res = await axios.post(`${API_URL}/referrals/${id}/notes`, { note }, config);
     
     dispatch({
       type: REFERRAL_NOTE_ADD_SUCCESS,
@@ -215,10 +165,7 @@ export const addReferralNote = (id, note) => async (dispatch, getState) => {
     // Refresh referral details
     dispatch(getReferralById(id));
   } catch (err) {
-    const errorMessage = 
-      err.response && err.response.data.message 
-        ? err.response.data.message 
-        : 'Failed to add note to referral';
+    const errorMessage = err.response?.data?.message || 'Failed to add note to referral';
     
     dispatch(setAlert(errorMessage, 'error'));
   }
@@ -240,21 +187,14 @@ export const uploadReferralAttachment = (id, file) => async (dispatch, getState)
       }
     };
     
-    await axios.post(
-      `${API_URL}/referrals/${id}/attachments`, 
-      formData, 
-      config
-    );
+    await axios.post(`${API_URL}/referrals/${id}/attachments`, formData, config);
     
     dispatch(setAlert('File uploaded successfully', 'success'));
     
     // Refresh referral details
     dispatch(getReferralById(id));
   } catch (err) {
-    const errorMessage = 
-      err.response && err.response.data.message 
-        ? err.response.data.message 
-        : 'Failed to upload attachment';
+    const errorMessage = err.response?.data?.message || 'Failed to upload attachment';
     
     dispatch(setAlert(errorMessage, 'error'));
   }

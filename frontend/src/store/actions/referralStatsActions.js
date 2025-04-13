@@ -7,7 +7,7 @@ import {
   USER_STATS_SUCCESS,
   USER_STATS_ERROR
 } from './actionTypes';
-import { setAlert, setLoading, clearLoading } from './uiActions';
+import { setAlert } from './uiActions';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -17,7 +17,7 @@ export const getPlatformStats = () => async (dispatch, getState) => {
     dispatch({ type: STATS_LOADING });
     
     const { token } = getState().auth;
-    const config = { headers: { Authorization: `Bearer ${token}` } };
+    const config = { headers: { 'Authorization': `Bearer ${token}` } };
     
     const res = await axios.get(`${API_URL}/stats/platform`, config);
     
@@ -26,7 +26,7 @@ export const getPlatformStats = () => async (dispatch, getState) => {
       payload: res.data
     });
   } catch (err) {
-    const errorMessage = err.response?.data.message || 'Failed to fetch platform statistics';
+    const errorMessage = err.response?.data?.message || 'Failed to fetch platform statistics';
     dispatch({ type: STATS_ERROR, payload: errorMessage });
     dispatch(setAlert(errorMessage, 'error'));
   }
@@ -38,7 +38,7 @@ export const getUserStats = () => async (dispatch, getState) => {
     dispatch({ type: USER_STATS_LOADING });
     
     const { token } = getState().auth;
-    const config = { headers: { Authorization: `Bearer ${token}` } };
+    const config = { headers: { 'Authorization': `Bearer ${token}` } };
     
     const res = await axios.get(`${API_URL}/stats/user`, config);
     
@@ -47,7 +47,7 @@ export const getUserStats = () => async (dispatch, getState) => {
       payload: res.data
     });
   } catch (err) {
-    const errorMessage = err.response?.data.message || 'Failed to fetch user statistics';
+    const errorMessage = err.response?.data?.message || 'Failed to fetch user statistics';
     dispatch({ type: USER_STATS_ERROR, payload: errorMessage });
     dispatch(setAlert(errorMessage, 'error'));
   }
@@ -56,10 +56,10 @@ export const getUserStats = () => async (dispatch, getState) => {
 // Get company referral statistics
 export const getCompanyStats = (companyId) => async (dispatch, getState) => {
   try {
-    dispatch(setLoading());
+    dispatch({ type: STATS_LOADING });
     
     const { token } = getState().auth;
-    const config = { headers: { Authorization: `Bearer ${token}` } };
+    const config = { headers: { 'Authorization': `Bearer ${token}` } };
     
     const res = await axios.get(`${API_URL}/stats/company/${companyId}`, config);
     
@@ -71,23 +71,20 @@ export const getCompanyStats = (companyId) => async (dispatch, getState) => {
         statsType: 'company'
       }
     });
-    
-    dispatch(clearLoading());
   } catch (err) {
-    const errorMessage = err.response?.data.message || 'Failed to fetch company statistics';
+    const errorMessage = err.response?.data?.message || 'Failed to fetch company statistics';
     dispatch({ type: STATS_ERROR, payload: errorMessage });
     dispatch(setAlert(errorMessage, 'error'));
-    dispatch(clearLoading());
   }
 };
 
 // Get job category statistics (for data visualization)
 export const getJobCategoryStats = () => async (dispatch, getState) => {
   try {
-    dispatch(setLoading());
+    dispatch({ type: STATS_LOADING });
     
     const { token } = getState().auth;
-    const config = { headers: { Authorization: `Bearer ${token}` } };
+    const config = { headers: { 'Authorization': `Bearer ${token}` } };
     
     const res = await axios.get(`${API_URL}/stats/job-categories`, config);
     
@@ -99,12 +96,9 @@ export const getJobCategoryStats = () => async (dispatch, getState) => {
         statsType: 'jobCategories'
       }
     });
-    
-    dispatch(clearLoading());
   } catch (err) {
-    const errorMessage = err.response?.data.message || 'Failed to fetch job category statistics';
+    const errorMessage = err.response?.data?.message || 'Failed to fetch job category statistics';
     dispatch({ type: STATS_ERROR, payload: errorMessage });
     dispatch(setAlert(errorMessage, 'error'));
-    dispatch(clearLoading());
   }
 }; 

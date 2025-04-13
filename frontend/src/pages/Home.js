@@ -17,7 +17,11 @@ import {
   Search as SearchIcon,
   BusinessCenter as BusinessIcon,
   People as PeopleIcon,
-  TrendingUp as TrendingUpIcon
+  TrendingUp as TrendingUpIcon,
+  Image as ImageIcon,
+  Assessment as AssessmentIcon,
+  VerifiedUser as VerifiedUserIcon,
+  LocalOffer as LocalOfferIcon
 } from '@mui/icons-material';
 
 const Home = () => {
@@ -79,15 +83,19 @@ const Home = () => {
               </Stack>
             </Grid>
             <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'block' } }}>
-              <img 
-                src="/hero-image.svg" 
-                alt="Job referrals illustration" 
-                style={{ 
-                  width: '100%', 
-                  maxHeight: '400px',
-                  filter: 'drop-shadow(0 10px 8px rgba(0, 0, 0, 0.04))'
-                }} 
-              />
+              <Box
+                sx={{
+                  bgcolor: 'primary.light',
+                  p: 4,
+                  borderRadius: 2,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: 400
+                }}
+              >
+                <ImageIcon sx={{ fontSize: 100, color: 'white', opacity: 0.7 }} />
+              </Box>
             </Grid>
           </Grid>
         </Container>
@@ -191,12 +199,18 @@ const Home = () => {
           <Grid container spacing={4}>
             <Grid item xs={12} md={6}>
               <Card sx={{ height: '100%', borderRadius: 4, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <CardMedia
-                  component="img"
-                  height="240"
-                  image="/job-board.jpg"
-                  alt="Job board"
-                />
+                <Box
+                  sx={{
+                    bgcolor: 'secondary.light',
+                    p: 4,
+                    height: 240,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  <ImageIcon sx={{ fontSize: 80, color: 'secondary.main' }} />
+                </Box>
                 <CardContent sx={{ p: 4 }}>
                   <Typography variant="h5" component="h3" gutterBottom fontWeight="bold">
                     Integrated Job Board
@@ -210,12 +224,18 @@ const Home = () => {
 
             <Grid item xs={12} md={6}>
               <Card sx={{ height: '100%', borderRadius: 4, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <CardMedia
-                  component="img"
-                  height="240"
-                  image="/analytics.jpg"
-                  alt="Analytics"
-                />
+                <Box
+                  sx={{
+                    bgcolor: 'info.light',
+                    p: 4,
+                    height: 240,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  <AssessmentIcon sx={{ fontSize: 80, color: 'info.main' }} />
+                </Box>
                 <CardContent sx={{ p: 4 }}>
                   <Typography variant="h5" component="h3" gutterBottom fontWeight="bold">
                     Comprehensive Analytics
@@ -229,12 +249,18 @@ const Home = () => {
 
             <Grid item xs={12} md={6}>
               <Card sx={{ height: '100%', borderRadius: 4, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <CardMedia
-                  component="img"
-                  height="240"
-                  image="/verification.jpg"
-                  alt="Verification"
-                />
+                <Box
+                  sx={{
+                    bgcolor: 'success.light',
+                    p: 4,
+                    height: 240,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  <VerifiedUserIcon sx={{ fontSize: 80, color: 'success.main' }} />
+                </Box>
                 <CardContent sx={{ p: 4 }}>
                   <Typography variant="h5" component="h3" gutterBottom fontWeight="bold">
                     LinkedIn Verification
@@ -248,12 +274,18 @@ const Home = () => {
 
             <Grid item xs={12} md={6}>
               <Card sx={{ height: '100%', borderRadius: 4, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <CardMedia
-                  component="img"
-                  height="240"
-                  image="/rewards.jpg"
-                  alt="Rewards"
-                />
+                <Box
+                  sx={{
+                    bgcolor: 'warning.light',
+                    p: 4,
+                    height: 240,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  <LocalOfferIcon sx={{ fontSize: 80, color: 'warning.main' }} />
+                </Box>
                 <CardContent sx={{ p: 4 }}>
                   <Typography variant="h5" component="h3" gutterBottom fontWeight="bold">
                     Reward System

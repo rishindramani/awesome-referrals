@@ -16,7 +16,7 @@ export const fetchNotifications = () => async (dispatch, getState) => {
     dispatch({ type: FETCH_NOTIFICATIONS_LOADING });
     
     const { token } = getState().auth;
-    const config = { headers: { Authorization: `Bearer ${token}` } };
+    const config = { headers: { 'Authorization': `Bearer ${token}` } };
     
     const res = await axios.get(`${API_URL}/notifications`, config);
     
@@ -25,7 +25,7 @@ export const fetchNotifications = () => async (dispatch, getState) => {
       payload: res.data
     });
   } catch (err) {
-    const errorMessage = err.response?.data.message || 'Failed to fetch notifications';
+    const errorMessage = err.response?.data?.message || 'Failed to fetch notifications';
     dispatch({ type: FETCH_NOTIFICATIONS_ERROR, payload: errorMessage });
   }
 };
@@ -34,7 +34,7 @@ export const fetchNotifications = () => async (dispatch, getState) => {
 export const markNotificationRead = (notificationId) => async (dispatch, getState) => {
   try {
     const { token } = getState().auth;
-    const config = { headers: { Authorization: `Bearer ${token}` } };
+    const config = { headers: { 'Authorization': `Bearer ${token}` } };
     
     await axios.put(`${API_URL}/notifications/${notificationId}/read`, {}, config);
     
@@ -43,7 +43,7 @@ export const markNotificationRead = (notificationId) => async (dispatch, getStat
       payload: notificationId
     });
   } catch (err) {
-    const errorMessage = err.response?.data.message || 'Failed to mark notification as read';
+    const errorMessage = err.response?.data?.message || 'Failed to mark notification as read';
     dispatch(setAlert(errorMessage, 'error'));
   }
 };
@@ -52,14 +52,14 @@ export const markNotificationRead = (notificationId) => async (dispatch, getStat
 export const markAllNotificationsRead = () => async (dispatch, getState) => {
   try {
     const { token } = getState().auth;
-    const config = { headers: { Authorization: `Bearer ${token}` } };
+    const config = { headers: { 'Authorization': `Bearer ${token}` } };
     
     await axios.put(`${API_URL}/notifications/read-all`, {}, config);
     
     dispatch({ type: MARK_ALL_NOTIFICATIONS_READ });
     dispatch(setAlert('All notifications marked as read', 'success'));
   } catch (err) {
-    const errorMessage = err.response?.data.message || 'Failed to mark all notifications as read';
+    const errorMessage = err.response?.data?.message || 'Failed to mark all notifications as read';
     dispatch(setAlert(errorMessage, 'error'));
   }
 }; 

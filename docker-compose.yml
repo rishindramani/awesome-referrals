@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: awesome-referrals-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: awesome_referrals
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - awesome-referrals-network
+
+  redis:
+    image: redis:alpine
+    container_name: awesome-referrals-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - awesome-referrals-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: awesome-referrals-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      NODE_ENV: development
+      PORT: 8000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: awesome_referrals
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: dev_jwt_secret
+      JWT_EXPIRY: 1h
+      REFRESH_TOKEN_EXPIRY: 7d
+    networks:
+      - awesome-referrals-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: awesome-referrals-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: development
+      REACT_APP_API_URL: http://localhost:8000/api
+    networks:
+      - awesome-referrals-network
+
+networks:
+  awesome-referrals-network:
+    driver: bridge
+
+volumes:
+  postgres-data: 

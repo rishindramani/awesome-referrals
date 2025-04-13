@@ -30,13 +30,15 @@ import {
   SwapHoriz as ReferralIcon,
   Notifications as NotificationsIcon,
   ExitToApp as LogoutIcon,
-  ChevronLeft as ChevronLeftIcon
+  ChevronLeft as ChevronLeftIcon,
+  Business as BusinessIcon
 } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { toggleSidebar, toggleNotificationPanel } from '../../store/actions/uiActions';
 import { logout } from '../../store/actions/authActions';
 import AlertMessage from '../common/AlertMessage';
+import NotificationPanel from '../notifications/NotificationPanel';
 
 const drawerWidth = 240;
 
@@ -70,6 +72,7 @@ const MainLayout = () => {
     { text: 'Home', icon: <HomeIcon />, path: '/', auth: false },
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', auth: true },
     { text: 'Job Search', icon: <JobIcon />, path: '/jobs', auth: true },
+    { text: 'Companies', icon: <BusinessIcon />, path: '/companies', auth: true },
     { text: 'Referrals', icon: <ReferralIcon />, path: '/referrals', auth: true },
     { text: 'Profile', icon: <PersonIcon />, path: '/profile', auth: true }
   ];
@@ -167,7 +170,7 @@ const MainLayout = () => {
           {isAuthenticated ? (
             <>
               <IconButton color="inherit" onClick={() => dispatch(toggleNotificationPanel())}>
-                <Badge badgeContent={4} color="error">
+                <Badge badgeContent={user?.unreadNotifications || 0} color="error">
                   <NotificationsIcon />
                 </Badge>
               </IconButton>
@@ -228,6 +231,9 @@ const MainLayout = () => {
           )}
         </Toolbar>
       </AppBar>
+      
+      {/* Notification Panel */}
+      <NotificationPanel />
       
       {/* Sidebar / Drawer */}
       {isMobile ? (

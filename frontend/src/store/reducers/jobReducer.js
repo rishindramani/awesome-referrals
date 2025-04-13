@@ -1,11 +1,12 @@
 import {
-  FETCH_JOBS_START,
-  FETCH_JOBS_SUCCESS,
-  FETCH_JOBS_FAIL,
-  FETCH_JOB_DETAILS_START,
-  FETCH_JOB_DETAILS_SUCCESS,
-  FETCH_JOB_DETAILS_FAIL,
-  CLEAR_JOB_DETAILS
+  JOBS_LOADING,
+  JOBS_SUCCESS,
+  JOBS_ERROR,
+  JOB_DETAIL_LOADING,
+  JOB_DETAIL_SUCCESS,
+  JOB_DETAIL_ERROR,
+  TOP_JOBS_SUCCESS,
+  SAVE_JOB_SUCCESS
 } from '../actions/actionTypes';
 
 const initialState = {
@@ -22,37 +23,39 @@ const initialState = {
     experienceLevel: '',
     companyId: '',
     keyword: ''
-  }
+  },
+  topJobs: [],
+  savedJobs: []
 };
 
 const jobReducer = (state = initialState, action) => {
   switch (action.type) {
-    case FETCH_JOBS_START:
+    case JOBS_LOADING:
       return {
         ...state,
         loading: true,
         error: null
       };
     
-    case FETCH_JOBS_SUCCESS:
+    case JOBS_SUCCESS:
       return {
         ...state,
         jobs: action.payload.jobs,
-        totalJobs: action.payload.totalJobs,
-        currentPage: action.payload.currentPage,
-        totalPages: action.payload.totalPages,
+        totalJobs: action.payload.pagination?.totalItems || 0,
+        currentPage: action.payload.pagination?.page || 1,
+        totalPages: action.payload.pagination?.totalPages || 1,
         loading: false,
         error: null
       };
     
-    case FETCH_JOBS_FAIL:
+    case JOBS_ERROR:
       return {
         ...state,
         loading: false,
         error: action.payload
       };
     
-    case FETCH_JOB_DETAILS_START:
+    case JOB_DETAIL_LOADING:
       return {
         ...state,
         job: null,
@@ -60,7 +63,7 @@ const jobReducer = (state = initialState, action) => {
         error: null
       };
     
-    case FETCH_JOB_DETAILS_SUCCESS:
+    case JOB_DETAIL_SUCCESS:
       return {
         ...state,
         job: action.payload,
@@ -68,7 +71,7 @@ const jobReducer = (state = initialState, action) => {
         error: null
       };
     
-    case FETCH_JOB_DETAILS_FAIL:
+    case JOB_DETAIL_ERROR:
       return {
         ...state,
         job: null,
@@ -76,10 +79,18 @@ const jobReducer = (state = initialState, action) => {
         error: action.payload
       };
     
-    case CLEAR_JOB_DETAILS:
+    case TOP_JOBS_SUCCESS:
       return {
         ...state,
-        job: null
+        topJobs: action.payload
+      };
+      
+    case SAVE_JOB_SUCCESS:
+      return {
+        ...state,
+        savedJobs: action.payload.removed 
+          ? state.savedJobs.filter(job => job.id !== action.payload.id)
+          : [...state.savedJobs, action.payload]
       };
     
     default:

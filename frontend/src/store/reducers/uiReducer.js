@@ -13,7 +13,7 @@ const initialState = {
   loading: false,
   alerts: [],
   sidebarOpen: false,
-  notificationPanelOpen: false,
+  isNotificationPanelOpen: false,
   notifications: [],
   unreadNotificationsCount: 0
 };
@@ -53,7 +53,7 @@ const uiReducer = (state = initialState, action) => {
     case TOGGLE_NOTIFICATION_PANEL:
       return {
         ...state,
-        notificationPanelOpen: !state.notificationPanelOpen
+        isNotificationPanelOpen: !state.isNotificationPanelOpen
       };
     
     case MARK_NOTIFICATION_READ:

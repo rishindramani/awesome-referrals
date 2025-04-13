@@ -1,18 +1,17 @@
 import {
-  FETCH_REFERRALS_START,
-  FETCH_REFERRALS_SUCCESS,
-  FETCH_REFERRALS_FAIL,
-  FETCH_REFERRAL_DETAILS_START,
-  FETCH_REFERRAL_DETAILS_SUCCESS,
-  FETCH_REFERRAL_DETAILS_FAIL,
-  CREATE_REFERRAL_REQUEST_START,
-  CREATE_REFERRAL_REQUEST_SUCCESS,
-  CREATE_REFERRAL_REQUEST_FAIL,
-  UPDATE_REFERRAL_STATUS_START,
-  UPDATE_REFERRAL_STATUS_SUCCESS,
-  UPDATE_REFERRAL_STATUS_FAIL,
-  CLEAR_REFERRAL_DETAILS,
-  CLEAR_REFERRAL_ERROR
+  REFERRALS_LOADING,
+  REFERRALS_SUCCESS,
+  REFERRALS_ERROR,
+  REFERRAL_DETAIL_LOADING,
+  REFERRAL_DETAIL_SUCCESS,
+  REFERRAL_DETAIL_ERROR,
+  REFERRAL_CREATE_LOADING,
+  REFERRAL_CREATE_SUCCESS,
+  REFERRAL_CREATE_ERROR,
+  REFERRAL_UPDATE_LOADING,
+  REFERRAL_UPDATE_SUCCESS,
+  REFERRAL_UPDATE_ERROR,
+  REFERRAL_NOTE_ADD_SUCCESS
 } from '../actions/actionTypes';
 
 const initialState = {
@@ -28,10 +27,10 @@ const initialState = {
 
 const referralReducer = (state = initialState, action) => {
   switch (action.type) {
-    case FETCH_REFERRALS_START:
-    case FETCH_REFERRAL_DETAILS_START:
-    case CREATE_REFERRAL_REQUEST_START:
-    case UPDATE_REFERRAL_STATUS_START:
+    case REFERRALS_LOADING:
+    case REFERRAL_DETAIL_LOADING:
+    case REFERRAL_CREATE_LOADING:
+    case REFERRAL_UPDATE_LOADING:
       return {
         ...state,
         loading: true,
@@ -39,18 +38,18 @@ const referralReducer = (state = initialState, action) => {
         success: false
       };
     
-    case FETCH_REFERRALS_SUCCESS:
+    case REFERRALS_SUCCESS:
       return {
         ...state,
-        referrals: action.payload.referrals,
-        totalReferrals: action.payload.totalReferrals,
-        currentPage: action.payload.currentPage,
-        totalPages: action.payload.totalPages,
+        referrals: action.payload.referrals || action.payload,
+        totalReferrals: action.payload.pagination?.totalItems || action.payload.length || 0,
+        currentPage: action.payload.pagination?.page || 1,
+        totalPages: action.payload.pagination?.totalPages || 1,
         loading: false,
         error: null
       };
     
-    case FETCH_REFERRAL_DETAILS_SUCCESS:
+    case REFERRAL_DETAIL_SUCCESS:
       return {
         ...state,
         referral: action.payload,
@@ -58,7 +57,7 @@ const referralReducer = (state = initialState, action) => {
         error: null
       };
     
-    case CREATE_REFERRAL_REQUEST_SUCCESS:
+    case REFERRAL_CREATE_SUCCESS:
       return {
         ...state,
         referrals: [action.payload, ...state.referrals],
@@ -67,7 +66,7 @@ const referralReducer = (state = initialState, action) => {
         success: true
       };
     
-    case UPDATE_REFERRAL_STATUS_SUCCESS:
+    case REFERRAL_UPDATE_SUCCESS:
       return {
         ...state,
         referrals: state.referrals.map(referral => 
@@ -79,27 +78,25 @@ const referralReducer = (state = initialState, action) => {
         success: true
       };
     
-    case FETCH_REFERRALS_FAIL:
-    case FETCH_REFERRAL_DETAILS_FAIL:
-    case CREATE_REFERRAL_REQUEST_FAIL:
-    case UPDATE_REFERRAL_STATUS_FAIL:
+    case REFERRAL_NOTE_ADD_SUCCESS:
+      return {
+        ...state,
+        referral: {
+          ...state.referral,
+          notes: [...(state.referral.notes || []), action.payload]
+        },
+        loading: false,
+        success: true
+      };
+    
+    case REFERRALS_ERROR:
+    case REFERRAL_DETAIL_ERROR:
+    case REFERRAL_CREATE_ERROR:
+    case REFERRAL_UPDATE_ERROR:
       return {
         ...state,
         loading: false,
         error: action.payload,
-        success: false
-      };
-    
-    case CLEAR_REFERRAL_DETAILS:
-      return {
-        ...state,
-        referral: null
-      };
-    
-    case CLEAR_REFERRAL_ERROR:
-      return {
-        ...state,
-        error: null,
         success: false
       };
     

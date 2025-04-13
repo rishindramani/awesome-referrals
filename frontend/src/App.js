@@ -16,6 +16,8 @@ import JobSearch from './pages/JobSearch';
 import JobDetail from './pages/JobDetail';
 import Profile from './pages/Profile';
 import ReferralRequests from './pages/ReferralRequests';
+import Companies from './pages/Companies';
+import CompanyDetail from './pages/CompanyDetail';
 import NotFound from './pages/NotFound';
 
 // Redux actions
@@ -64,6 +66,16 @@ const App = () => {
         <Route path="jobs/:id" element={
           <ProtectedRoute isAuthenticated={isAuthenticated}>
             <JobDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="companies" element={
+          <ProtectedRoute isAuthenticated={isAuthenticated}>
+            <Companies />
+          </ProtectedRoute>
+        } />
+        <Route path="companies/:id" element={
+          <ProtectedRoute isAuthenticated={isAuthenticated}>
+            <CompanyDetail />
           </ProtectedRoute>
         } />
         <Route path="profile" element={

@@ -19,59 +19,81 @@ A modern job referral platform that connects job seekers with employees at their
 - **Cloud**: AWS (EC2, S3, RDS, Lambda, SES, CloudWatch)
 - **DevOps**: Docker, GitHub Actions
 
+## 📊 Project Status
+
+The project has completed Phase 1 (Foundation) and is currently in Phase 2 (Core Functionality). Here's what's been implemented:
+
+### Backend
+- Express server with configuration
+- Database models and relationships
+- Authentication system with JWT
+- User management API endpoints
+
+### Frontend
+- React application with Redux state management
+- User authentication flow (login, register)
+- Job search and details pages
+- User dashboard with analytics
+- Referral request management
+- User profile management
+
+See the [project plan](./project-plan.md) for detailed information about the roadmap and future milestones.
+
 ## 🚀 Getting Started
 
 ### Prerequisites
-
-- Node.js (v14+)
-- npm or yarn
-- PostgreSQL
-- Docker & Docker Compose (for development)
+- Node.js v14+ and npm
+- PostgreSQL database
+- Docker and Docker Compose (optional, for containerized setup)
 
 ### Installation
 
-1. Clone the repository
-   ```
-   git clone https://github.com/your-username/awesome-referrals.git
-   cd awesome-referrals
-   ```
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/awesome-referrals.git
+cd awesome-referrals
+```
 
-2. Install dependencies
-   ```
-   # Install backend dependencies
-   cd backend
-   npm install
+2. Install dependencies:
+```bash
+# Install backend dependencies
+cd backend
+npm install
 
-   # Install frontend dependencies
-   cd ../frontend
-   npm install
-   ```
+# Install frontend dependencies
+cd ../frontend
+npm install
+```
 
-3. Set up environment variables
-   ```
-   # Copy the example env files
-   cp backend/.env.example backend/.env
-   cp frontend/.env.example frontend/.env
-   ```
+3. Configure environment variables:
+   - Create a `.env` file in the backend directory based on `.env.example`
+   - Set up your database connection and JWT secret
 
-4. Set up the database
-   ```
-   # Using Docker
-   docker-compose up -d postgres
+4. Run the database migrations:
+```bash
+cd backend
+npx sequelize-cli db:migrate
+```
 
-   # Or run migrations directly
-   cd backend
-   npm run migrate
-   ```
+5. Start the development servers:
 
-5. Start the development servers
-   ```
-   # Backend (from the backend directory)
-   npm run dev
+```bash
+# Start backend server (from backend directory)
+npm run dev
 
-   # Frontend (from the frontend directory)
-   npm start
-   ```
+# Start frontend development server (from frontend directory)
+npm start
+```
+
+### Using Docker
+
+You can also use Docker to run the entire application:
+
+```bash
+docker-compose up
+```
+
+Visit http://localhost:3000 to access the application.
 
 ## 📝 Project Structure
 
@@ -79,6 +101,10 @@ A modern job referral platform that connects job seekers with employees at their
 awesome-referrals/
 ├── frontend/             # React frontend application
 │   ├── public/           # Static files
+│   ├── src/              # Source files
+│   │   ├── components/   # Reusable components
+│   │   ├── pages/        # Page components
+│   │   ├── store/        # Redux store and actions
 │   │   └── App.js        # Main App component
 │   └── package.json      # Frontend dependencies
 │
@@ -110,28 +136,6 @@ npm test
 cd frontend
 npm test
 ```
-
-## 📊 Project Status
-
-The project is currently in the initial development phase. Here's what's been implemented so far:
-
-- ✅ Project structure and architecture planning
-- ✅ Environment configuration
-- ✅ Database models and relationships
-- ✅ Basic authentication API endpoints
-- ✅ Frontend foundation with React and Material UI
-- ✅ Redux store setup with authentication state management
-- ✅ Home page and login UI components
-
-### Next Steps:
-
-- User registration and profile completion
-- Job listing integration with Naukri.com
-- Referral request system
-- Dashboard analytics
-- Messaging between referrers and seekers
-
-See the [project plan](./project-plan.md) for the full roadmap and milestones.
 
 ## 🤝 Contributing
 

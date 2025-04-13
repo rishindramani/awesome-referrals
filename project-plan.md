@@ -1,7 +1,170 @@
 # Awesome Referrals - Project Plan
 
 ## Project Overview
-Awesome Referrals is a web application designed to connect job seekers with employees at their target companies for referrals. The platform will integrate with job listing websites like Naukri.com, provide dashboards with analytics for both job seekers and referrers, and feature an intuitive, community-focused UI.
+Awesome Referrals is a platform connecting job seekers with employees at target companies who can provide internal referrals. The platform aims to increase the chances of getting interviews by leveraging personal connections and streamlining the referral process.
+
+## Tech Stack
+
+- **Frontend**: React, Redux, Material UI
+- **Backend**: Node.js, Express
+- **Database**: PostgreSQL with Sequelize ORM
+- **Authentication**: JWT, LinkedIn OAuth
+- **Deployment**: Docker, AWS
+
+## Project Structure
+
+```
+├── backend/                 # Node.js backend API
+│   ├── src/
+│   │   ├── config/          # Environment configuration
+│   │   ├── controllers/     # Request handlers
+│   │   ├── middleware/      # Express middleware
+│   │   ├── models/          # Sequelize models
+│   │   ├── routes/          # API routes
+│   │   ├── utils/           # Utility functions
+│   │   └── app.js           # Main Express app
+│   ├── tests/               # Backend tests
+│   └── package.json         # Backend dependencies
+│
+├── frontend/                # React frontend
+│   ├── public/              # Static files
+│   ├── src/
+│   │   ├── components/      # React components
+│   │   ├── pages/           # Page components
+│   │   ├── store/           # Redux store
+│   │   ├── utils/           # Utility functions
+│   │   ├── App.js           # Main React app
+│   │   └── index.js         # Entry point
+│   ├── tests/               # Frontend tests
+│   └── package.json         # Frontend dependencies
+│
+├── docker-compose.yml       # Docker configuration
+└── README.md                # Project documentation
+```
+
+## Phase 1: Foundation (Completed)
+
+### Backend Development
+
+- ✅ Setup Express server with basic configuration
+- ✅ Database schema design and implementation
+- ✅ Create models for User, Company, Job, UserProfile, and ReferralRequest
+- ✅ Authentication controllers and middleware
+- ✅ Basic API endpoints for authentication and user management
+
+### Frontend Development
+
+- ✅ Setup React application with Redux
+- ✅ Implement Redux store with auth, UI, and job reducers
+- ✅ Create authentication-related components
+- ✅ Design and implement common layout components
+- ✅ Build essential UI components (alerts, loaders, etc.)
+- ✅ Develop basic pages:
+  - ✅ Home page
+  - ✅ Login page
+  - ✅ Registration page
+  - ✅ Dashboard
+  - ✅ Job Search
+  - ✅ Job Detail
+  - ✅ Referral Requests
+  - ✅ User Profile
+
+## Phase 2: Core Functionality (In Progress)
+
+### Backend Development
+
+- [ ] Implement job listing API with search and filters
+- [ ] Create endpoints for referral requests
+- [ ] Develop user profile management
+- [ ] Build notification system
+- [ ] Integrate with external job APIs (e.g., Naukri.com)
+
+### Frontend Development
+
+- [ ] Implement job browsing and search functionality
+- [ ] Create referral request workflow
+- [ ] Build messaging system between referrers and seekers
+- [ ] Complete user profile management
+- [ ] Develop analytics dashboard
+
+## Phase 3: Enhanced Features
+
+### Backend Development
+
+- [ ] LinkedIn integration for verification
+- [ ] Resume parsing and job matching algorithms
+- [ ] Advanced analytics for job application tracking
+- [ ] Recommendation engine
+- [ ] Admin dashboard and moderation tools
+
+### Frontend Development
+
+- [ ] Company profiles and reviews
+- [ ] Advanced filtering and recommendation UI
+- [ ] Mobile responsiveness improvements
+- [ ] Advanced analytics visualization
+- [ ] Admin interface
+
+## Phase 4: Polishing and Scaling
+
+### Backend Development
+
+- [ ] Performance optimizations
+- [ ] Caching strategies
+- [ ] Rate limiting and security enhancements
+- [ ] Database scaling solutions
+- [ ] Automated testing
+
+### Frontend Development
+
+- [ ] Performance optimizations
+- [ ] Progressive Web App (PWA) features
+- [ ] Accessibility improvements
+- [ ] UI/UX refinements
+- [ ] Comprehensive testing
+
+## Timeline
+
+- **Phase 1 (Foundation)**: Completed
+- **Phase 2 (Core Functionality)**: Current focus
+- **Phase 3 (Enhanced Features)**: Planned after Phase 2 completion
+- **Phase 4 (Polishing and Scaling)**: Final phase
+
+## Key Milestones
+
+1. ✅ MVP with basic authentication and user profiles
+2. ✅ Job search and details implementation
+3. ✅ Referral request system basic functionality
+4. [ ] Complete messaging system
+5. [ ] LinkedIn integration
+6. [ ] Analytics and recommendation engine
+7. [ ] Admin dashboard and moderation tools
+8. [ ] Mobile-optimized version
+9. [ ] Production deployment with scaling
+
+## Challenges and Solutions
+
+### Challenges
+
+1. **Data Integrity**: Ensuring accurate job listings and user profiles
+   - Solution: Implement verification processes and regular data cleaning
+
+2. **User Trust**: Building trust between job seekers and referrers
+   - Solution: LinkedIn verification, review system, and transparent profiles
+
+3. **Scaling**: Handling increased traffic as the platform grows
+   - Solution: Implement caching, pagination, and database indexing strategies
+
+4. **Engagement**: Keeping users engaged on the platform
+   - Solution: Notification system, personalized recommendations, and analytics
+
+## Future Considerations
+
+- Mobile app development (React Native)
+- AI-powered job matching
+- Premium features and subscription model
+- Expansion to additional markets
+- Integration with ATS (Applicant Tracking Systems)
 
 ## Technical Stack
 

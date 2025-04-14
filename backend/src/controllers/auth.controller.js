@@ -133,14 +133,19 @@ exports.login = async (req, res, next) => {
 // Get current user
 exports.getCurrentUser = async (req, res, next) => {
   try {
-    // In a real app, req.user would be set by the protect middleware
-    // For mock purposes, we'll use a fixed user
-    const user = { ...mockUsers['user@example.com'] };
-    delete user.password_hash;
+    // req.user should be set by the protect middleware
+    if (!req.user) {
+      return next(new AppError('User not found or not authenticated', 401));
+    }
+    
+    // Return the user object attached by the middleware
+    const user = { ...req.user };
+    // Optionally remove sensitive fields if needed, e.g., password hash if it exists
+    // delete user.password_hash; 
     
     res.status(200).json({
       status: 'success',
-      user
+      user // Send the user object directly
     });
   } catch (error) {
     logger.error('Get current user error:', error);

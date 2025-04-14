@@ -42,6 +42,9 @@ import {
   EmojiPeople as BenefitsIcon,
   LocalOffer as SkillsIcon
 } from '@mui/icons-material';
+import ReferralRequestForm from '../components/referrals/ReferralRequestForm';
+import { useAuthContext } from '../context/AuthContext';
+import { setAlert } from '../store/actions/uiActions';
 
 // Sample job data (in a real app, this would come from an API)
 const jobsData = [
@@ -181,12 +184,13 @@ const JobDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { user } = useAuthContext();
   const [loading, setLoading] = useState(true);
   const [job, setJob] = useState(null);
   const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [message, setMessage] = useState('');
+  const [selectedReferrer, setSelectedReferrer] = useState(null);
+  const [showReferralForm, setShowReferralForm] = useState(false);
   
   // In a real app, we would fetch job details from an API
   useEffect(() => {
@@ -212,19 +216,26 @@ const JobDetail = () => {
     // dispatch(saveJob(id, !saved));
   };
   
-  const handleOpenDialog = () => {
-    setOpenDialog(true);
+  const handleReferralRequest = (referrer) => {
+    if (!user) {
+      dispatch(setAlert('Please log in to request a referral', 'error'));
+      navigate('/login');
+      return;
+    }
+    
+    setSelectedReferrer(referrer);
+    setShowReferralForm(true);
   };
   
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
+  const handleCloseReferralForm = () => {
+    setShowReferralForm(false);
+    setSelectedReferrer(null);
   };
   
-  const handleSubmitReferralRequest = () => {
-    // In a real app, we would dispatch an action to submit the referral request
-    // dispatch(requestReferral(id, message));
-    handleCloseDialog();
-    // Show success message
+  const handleReferralSuccess = () => {
+    dispatch(setAlert('Your referral request has been sent successfully!', 'success'));
+    setShowReferralForm(false);
+    setSelectedReferrer(null);
   };
   
   if (loading) {
@@ -335,7 +346,6 @@ const JobDetail = () => {
                 size="large"
                 fullWidth
                 sx={{ mb: 2 }}
-                onClick={handleOpenDialog}
               >
                 Request Referral
               </Button>
@@ -567,37 +577,68 @@ const JobDetail = () => {
         </Grid>
       </Grid>
       
-      {/* Referral Request Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>Request Referral for {job.title} at {job.company}</DialogTitle>
-        <DialogContent>
-          <DialogContentText sx={{ mb: 2 }}>
-            Personalize your referral request to increase your chances of getting referred. Explain why you're a good fit for this position.
-          </DialogContentText>
-          <TextField
-            autoFocus
-            multiline
-            rows={6}
-            variant="outlined"
-            fullWidth
-            label="Message to Referrer"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Introduce yourself and explain why you're interested in this position. Highlight relevant skills and experience that make you a good fit."
-          />
+      {/* Referral Request Form Dialog */}
+      <Dialog
+        open={showReferralForm}
+        onClose={handleCloseReferralForm}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogContent sx={{ p: 0 }}>
+          {selectedReferrer && job && (
+            <ReferralRequestForm
+              jobId={job.id.toString()}
+              referrerId={selectedReferrer.id.toString()}
+              companyName={job.company}
+              jobTitle={job.title}
+              onSuccess={handleReferralSuccess}
+            />
+          )}
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button 
-            onClick={handleSubmitReferralRequest} 
-            variant="contained" 
-            color="primary"
-            disabled={!message.trim()}
-          >
-            Submit Request
-          </Button>
-        </DialogActions>
       </Dialog>
+      
+      {/* Potential Referrers Section */}
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="h5" gutterBottom>
+          Potential Referrers
+        </Typography>
+        <Typography variant="body1" paragraph>
+          Connect with employees who can refer you to this position
+        </Typography>
+        
+        <Grid container spacing={2}>
+          {job.potentialReferrers.map((referrer) => (
+            <Grid item xs={12} sm={6} md={4} key={referrer.id}>
+              <Card sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Avatar src={referrer.avatar} alt={referrer.name} sx={{ mr: 2 }}>
+                    {referrer.name.charAt(0)}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="subtitle1" fontWeight="medium">
+                      {referrer.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {referrer.title}
+                    </Typography>
+                  </Box>
+                </Box>
+                
+                <Box sx={{ mt: 'auto' }}>
+                  <Button 
+                    variant="contained" 
+                    color="primary" 
+                    fullWidth
+                    onClick={() => handleReferralRequest(referrer)}
+                  >
+                    Request Referral
+                  </Button>
+                </Box>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
     </Container>
   );
 };

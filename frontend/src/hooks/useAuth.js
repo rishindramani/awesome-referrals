@@ -149,26 +149,44 @@ const useAuth = () => {
   const loadUser = useCallback(async () => {
     // If no token, don't attempt to load user
     if (!token) {
-      dispatch({ type: 'AUTH_ERROR' });
+      dispatch({ type: 'AUTH_FAIL', payload: 'No token found' });
       return;
     }
     
     try {
       dispatch({ type: 'USER_LOADING' });
-      const response = await apiService.auth.getUser();
       
-      dispatch({
-        type: 'USER_LOADED',
-        payload: response.data
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout')), 5000);
       });
+      
+      const userPromise = apiService.auth.getUser();
+      const response = await Promise.race([userPromise, timeoutPromise]);
+      
+      if (response && response.data && response.data.user) {
+        dispatch({
+          type: 'USER_LOADED',
+          payload: response.data.user
+        });
+      } else if (response && response.data) {
+        dispatch({
+          type: 'USER_LOADED',
+          payload: response.data
+        });
+      } else {
+        dispatch({ type: 'AUTH_FAIL', payload: 'Invalid user data format' });
+      }
     } catch (err) {
-      // If error is 401, clear token
-      if (err.response?.status === 401) {
+      if (err.message === 'Network Error' || !err.response) {
+        dispatch(setAlert('Connection to server failed. Please try again later.', 'error'));
+      }
+      
+      if (err.response?.status === 401 || err.message === 'Request timeout') {
         localStorage.removeItem('token');
         setToken(null);
       }
       
-      dispatch({ type: 'AUTH_ERROR' });
+      dispatch({ type: 'AUTH_FAIL', payload: err.message });
     }
   }, [token, dispatch]);
   

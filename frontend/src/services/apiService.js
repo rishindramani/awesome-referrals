@@ -39,10 +39,24 @@ api.interceptors.response.use(
 const apiService = {
   // Auth endpoints
   auth: {
-    login: (credentials) => api.post('/auth/login', credentials),
-    register: (userData) => api.post('/auth/register', userData),
-    getUser: () => api.get('/auth/me'),
-    resetPasswordRequest: (email) => api.post('/auth/forgotpassword', { email }),
+    login: (credentials) => {
+      return api.post('/auth/login', credentials);
+    },
+    register: (userData) => {
+      return api.post('/auth/register', userData);
+    },
+    getUser: () => {
+      return api.get('/auth/me')
+        .then(response => {
+          return response;
+        })
+        .catch(err => {
+          throw err;
+        });
+    },
+    resetPasswordRequest: (email) => {
+      return api.post('/auth/forgotpassword', { email });
+    },
     resetPassword: (data) => api.post('/auth/resetpassword', data),
     updatePassword: (data) => api.patch('/auth/updatepassword', data),
     verifyEmail: (token) => api.get(`/auth/verify-email/${token}`),
@@ -88,7 +102,9 @@ const apiService = {
     delete: (id) => api.delete(`/referrals/${id}`),
     getRequests: (params) => api.get('/referrals/requests', { params }),
     approveRequest: (id) => api.put(`/referrals/requests/${id}/approve`),
-    rejectRequest: (id) => api.put(`/referrals/requests/${id}/reject`)
+    rejectRequest: (id) => api.put(`/referrals/requests/${id}/reject`),
+    getRequestsByJob: (jobId) => api.get(`/referrals/jobs/${jobId}`),
+    addReferralNote: (id, note) => api.post(`/referrals/${id}/notes`, { note })
   },
   
   // Notification endpoints
@@ -104,7 +120,8 @@ const apiService = {
     getConversation: (id) => api.get(`/conversations/${id}`),
     getMessages: (conversationId) => api.get(`/conversations/${conversationId}/messages`),
     sendMessage: (conversationId, content) => api.post(`/conversations/${conversationId}/messages`, { content }),
-    markAsRead: (messageId) => api.put(`/messages/${messageId}/read`)
+    markAsRead: (messageId) => api.put(`/messages/${messageId}/read`),
+    startConversation: (userId) => api.post('/conversations', { recipient_id: userId })
   }
 };
 

@@ -1,4 +1,3 @@
-import axios from 'axios';
 import {
   FETCH_NOTIFICATIONS_LOADING,
   FETCH_NOTIFICATIONS_SUCCESS,
@@ -7,18 +6,14 @@ import {
   MARK_ALL_NOTIFICATIONS_READ
 } from './actionTypes';
 import { setAlert } from './uiActions';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+import api from '../../services/apiService';
 
 // Fetch user notifications
-export const fetchNotifications = () => async (dispatch, getState) => {
+export const fetchNotifications = () => async (dispatch) => {
   try {
     dispatch({ type: FETCH_NOTIFICATIONS_LOADING });
     
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-    
-    const res = await axios.get(`${API_URL}/notifications`, config);
+    const res = await api.get('/notifications');
     
     dispatch({
       type: FETCH_NOTIFICATIONS_SUCCESS,
@@ -31,12 +26,9 @@ export const fetchNotifications = () => async (dispatch, getState) => {
 };
 
 // Mark a notification as read
-export const markNotificationRead = (notificationId) => async (dispatch, getState) => {
+export const markNotificationRead = (notificationId) => async (dispatch) => {
   try {
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-    
-    await axios.put(`${API_URL}/notifications/${notificationId}/read`, {}, config);
+    await api.put(`/notifications/${notificationId}/read`, {});
     
     dispatch({
       type: MARK_NOTIFICATION_READ,
@@ -49,12 +41,9 @@ export const markNotificationRead = (notificationId) => async (dispatch, getStat
 };
 
 // Mark all notifications as read
-export const markAllNotificationsRead = () => async (dispatch, getState) => {
+export const markAllNotificationsRead = () => async (dispatch) => {
   try {
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-    
-    await axios.put(`${API_URL}/notifications/read-all`, {}, config);
+    await api.put('/notifications/read-all', {});
     
     dispatch({ type: MARK_ALL_NOTIFICATIONS_READ });
     dispatch(setAlert('All notifications marked as read', 'success'));

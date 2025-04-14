@@ -6,9 +6,8 @@ import {
   REGISTER_START,
   REGISTER_SUCCESS,
   REGISTER_FAIL,
-  UPDATE_PROFILE_START,
-  UPDATE_PROFILE_SUCCESS,
-  UPDATE_PROFILE_FAIL
+  PROFILE_UPDATE_SUCCESS,
+  PROFILE_UPDATE_ERROR
 } from '../actions/actionTypes';
 
 const initialState = {
@@ -23,7 +22,6 @@ const authReducer = (state = initialState, action) => {
   switch (action.type) {
     case AUTH_START:
     case REGISTER_START:
-    case UPDATE_PROFILE_START:
       return {
         ...state,
         loading: true,
@@ -50,7 +48,7 @@ const authReducer = (state = initialState, action) => {
         error: null
       };
     
-    case UPDATE_PROFILE_SUCCESS:
+    case PROFILE_UPDATE_SUCCESS:
       return {
         ...state,
         user: action.payload,
@@ -70,7 +68,7 @@ const authReducer = (state = initialState, action) => {
         error: action.payload
       };
     
-    case UPDATE_PROFILE_FAIL:
+    case PROFILE_UPDATE_ERROR:
       return {
         ...state,
         loading: false,

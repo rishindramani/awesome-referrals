@@ -32,7 +32,9 @@ import {
   Search as SearchIcon,
   TrendingUp as TrendingUpIcon,
   Dashboard as DashboardIcon,
-  BarChart as BarChartIcon
+  BarChart as BarChartIcon,
+  MoreVert as MoreVertIcon,
+  Add as AddIcon
 } from '@mui/icons-material';
 
 // Import the StatsDashboard component

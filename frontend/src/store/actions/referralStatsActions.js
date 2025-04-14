@@ -1,4 +1,3 @@
-import axios from 'axios';
 import {
   STATS_LOADING,
   STATS_SUCCESS,
@@ -8,18 +7,14 @@ import {
   USER_STATS_ERROR
 } from './actionTypes';
 import { setAlert } from './uiActions';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+import api from '../../services/apiService';
 
 // Get overall platform statistics
-export const getPlatformStats = () => async (dispatch, getState) => {
+export const getPlatformStats = () => async (dispatch) => {
   try {
     dispatch({ type: STATS_LOADING });
     
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-    
-    const res = await axios.get(`${API_URL}/stats/platform`, config);
+    const res = await api.get('/stats/platform');
     
     dispatch({
       type: STATS_SUCCESS,
@@ -33,14 +28,11 @@ export const getPlatformStats = () => async (dispatch, getState) => {
 };
 
 // Get user's personal referral statistics
-export const getUserStats = () => async (dispatch, getState) => {
+export const getUserStats = () => async (dispatch) => {
   try {
     dispatch({ type: USER_STATS_LOADING });
     
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-    
-    const res = await axios.get(`${API_URL}/stats/user`, config);
+    const res = await api.get('/stats/user');
     
     dispatch({
       type: USER_STATS_SUCCESS,
@@ -54,14 +46,11 @@ export const getUserStats = () => async (dispatch, getState) => {
 };
 
 // Get company referral statistics
-export const getCompanyStats = (companyId) => async (dispatch, getState) => {
+export const getCompanyStats = (companyId) => async (dispatch) => {
   try {
     dispatch({ type: STATS_LOADING });
     
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-    
-    const res = await axios.get(`${API_URL}/stats/company/${companyId}`, config);
+    const res = await api.get(`/stats/company/${companyId}`);
     
     // Use the general stats success type but specify company in the payload
     dispatch({
@@ -79,14 +68,11 @@ export const getCompanyStats = (companyId) => async (dispatch, getState) => {
 };
 
 // Get job category statistics (for data visualization)
-export const getJobCategoryStats = () => async (dispatch, getState) => {
+export const getJobCategoryStats = () => async (dispatch) => {
   try {
     dispatch({ type: STATS_LOADING });
     
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-    
-    const res = await axios.get(`${API_URL}/stats/job-categories`, config);
+    const res = await api.get('/stats/job-categories');
     
     // Use the general stats success type but specify job categories in the payload
     dispatch({

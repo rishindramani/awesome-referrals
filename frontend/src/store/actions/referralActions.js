@@ -1,4 +1,3 @@
-import axios from 'axios';
 import {
   REFERRALS_LOADING,
   REFERRALS_SUCCESS,
@@ -15,19 +14,14 @@ import {
   REFERRAL_NOTE_ADD_SUCCESS
 } from './actionTypes';
 import { setAlert } from './uiActions';
-
-// API base URL
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+import api from '../../services/apiService';
 
 // Get all referrals for the current user
-export const getReferrals = () => async (dispatch, getState) => {
+export const getReferrals = () => async (dispatch) => {
   try {
     dispatch({ type: REFERRALS_LOADING });
     
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-    
-    const res = await axios.get(`${API_URL}/referrals`, config);
+    const res = await api.get('/referrals');
     
     dispatch({
       type: REFERRALS_SUCCESS,
@@ -41,19 +35,16 @@ export const getReferrals = () => async (dispatch, getState) => {
       payload: errorMessage
     });
     
-    dispatch(setAlert('Error fetching referrals', 'error'));
+    dispatch(setAlert(errorMessage, 'error'));
   }
 };
 
 // Get referral by ID
-export const getReferralById = (id) => async (dispatch, getState) => {
+export const getReferralById = (id) => async (dispatch) => {
   try {
     dispatch({ type: REFERRAL_DETAIL_LOADING });
     
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-    
-    const res = await axios.get(`${API_URL}/referrals/${id}`, config);
+    const res = await api.get(`/referrals/${id}`);
     
     dispatch({
       type: REFERRAL_DETAIL_SUCCESS,
@@ -67,19 +58,16 @@ export const getReferralById = (id) => async (dispatch, getState) => {
       payload: errorMessage
     });
     
-    dispatch(setAlert('Error fetching referral details', 'error'));
+    dispatch(setAlert(errorMessage, 'error'));
   }
 };
 
 // Create a new referral request
-export const createReferralRequest = (referralData, navigate) => async (dispatch, getState) => {
+export const createReferralRequest = (referralData, navigate) => async (dispatch) => {
   try {
     dispatch({ type: REFERRAL_CREATE_LOADING });
     
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-    
-    const res = await axios.post(`${API_URL}/referrals`, referralData, config);
+    const res = await api.post('/referrals', referralData);
     
     dispatch({
       type: REFERRAL_CREATE_SUCCESS,
@@ -105,14 +93,11 @@ export const createReferralRequest = (referralData, navigate) => async (dispatch
 };
 
 // Update referral status (accepted, rejected, completed)
-export const updateReferralStatus = (id, status) => async (dispatch, getState) => {
+export const updateReferralStatus = (id, status) => async (dispatch) => {
   try {
     dispatch({ type: REFERRAL_UPDATE_LOADING });
     
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-    
-    const res = await axios.put(`${API_URL}/referrals/${id}/status`, { status }, config);
+    const res = await api.put(`/referrals/${id}/status`, { status });
     
     dispatch({
       type: REFERRAL_UPDATE_SUCCESS,
@@ -148,12 +133,9 @@ export const updateReferralStatus = (id, status) => async (dispatch, getState) =
 };
 
 // Add note to referral
-export const addReferralNote = (id, note) => async (dispatch, getState) => {
+export const addReferralNote = (id, note) => async (dispatch) => {
   try {
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-    
-    const res = await axios.post(`${API_URL}/referrals/${id}/notes`, { note }, config);
+    const res = await api.post(`/referrals/${id}/notes`, { note });
     
     dispatch({
       type: REFERRAL_NOTE_ADD_SUCCESS,
@@ -172,22 +154,19 @@ export const addReferralNote = (id, note) => async (dispatch, getState) => {
 };
 
 // Upload attachment to referral
-export const uploadReferralAttachment = (id, file) => async (dispatch, getState) => {
+export const uploadReferralAttachment = (id, file) => async (dispatch) => {
   try {
-    const { token } = getState().auth;
-    
     // Create form data
     const formData = new FormData();
     formData.append('file', file);
     
     const config = {
       headers: {
-        'Content-Type': 'multipart/form-data',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'multipart/form-data'
       }
     };
     
-    await axios.post(`${API_URL}/referrals/${id}/attachments`, formData, config);
+    await api.post(`/referrals/${id}/attachments`, formData, config);
     
     dispatch(setAlert('File uploaded successfully', 'success'));
     

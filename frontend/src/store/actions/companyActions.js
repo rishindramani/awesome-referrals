@@ -1,4 +1,3 @@
-import axios from 'axios';
 import {
   COMPANIES_LOADING,
   COMPANIES_SUCCESS,
@@ -9,16 +8,14 @@ import {
   TOP_COMPANIES_SUCCESS
 } from './actionTypes';
 import { setAlert } from './uiActions';
-
-// API base URL
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+import api from '../../services/apiService';
 
 // Get all companies with pagination
 export const getCompanies = (page = 1, limit = 10) => async (dispatch) => {
   try {
     dispatch({ type: COMPANIES_LOADING });
     
-    const res = await axios.get(`${API_URL}/companies?page=${page}&limit=${limit}`);
+    const res = await api.get(`/companies?page=${page}&limit=${limit}`);
     
     dispatch({
       type: COMPANIES_SUCCESS,
@@ -39,7 +36,7 @@ export const getCompanyById = (id) => async (dispatch) => {
   try {
     dispatch({ type: COMPANY_DETAIL_LOADING });
     
-    const res = await axios.get(`${API_URL}/companies/${id}`);
+    const res = await api.get(`/companies/${id}`);
     
     dispatch({
       type: COMPANY_DETAIL_SUCCESS,
@@ -57,7 +54,7 @@ export const searchCompanies = (searchTerm) => async (dispatch) => {
   try {
     dispatch({ type: COMPANIES_LOADING });
     
-    const res = await axios.get(`${API_URL}/companies/search?q=${encodeURIComponent(searchTerm)}`);
+    const res = await api.get(`/companies/search?q=${encodeURIComponent(searchTerm)}`);
     
     dispatch({
       type: COMPANIES_SUCCESS,
@@ -76,7 +73,7 @@ export const searchCompanies = (searchTerm) => async (dispatch) => {
 // Get top companies
 export const getTopCompanies = (limit = 5) => async (dispatch) => {
   try {
-    const res = await axios.get(`${API_URL}/companies/top?limit=${limit}`);
+    const res = await api.get(`/companies/top?limit=${limit}`);
     
     dispatch({
       type: TOP_COMPANIES_SUCCESS,

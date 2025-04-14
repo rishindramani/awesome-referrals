@@ -20,6 +20,7 @@ import {
   ListItemAvatar,
   ListItemText,
   ListItemSecondaryAction,
+  ListItemIcon,
   Dialog,
   DialogActions,
   DialogContent,

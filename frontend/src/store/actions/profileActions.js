@@ -1,4 +1,3 @@
-import axios from 'axios';
 import {
   PROFILE_LOADING,
   PROFILE_SUCCESS,
@@ -19,19 +18,14 @@ import {
   SKILL_DELETE_ERROR
 } from './actionTypes';
 import { setAlert } from './uiActions';
-
-// API base URL
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+import api from '../../services/apiService';
 
 // Get current user profile
-export const getCurrentProfile = () => async (dispatch, getState) => {
+export const getCurrentProfile = () => async (dispatch) => {
   try {
     dispatch({ type: PROFILE_LOADING });
 
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-
-    const res = await axios.get(`${API_URL}/profiles/me`, config);
+    const res = await api.get('/profiles/me');
 
     dispatch({
       type: PROFILE_SUCCESS,
@@ -54,7 +48,7 @@ export const getProfileByUserId = (userId) => async (dispatch) => {
   try {
     dispatch({ type: PROFILE_LOADING });
 
-    const res = await axios.get(`${API_URL}/profiles/user/${userId}`);
+    const res = await api.get(`/profiles/user/${userId}`);
 
     dispatch({
       type: PROFILE_SUCCESS,
@@ -73,12 +67,9 @@ export const getProfileByUserId = (userId) => async (dispatch) => {
 };
 
 // Create or update user profile
-export const updateProfile = (profileData, navigate) => async (dispatch, getState) => {
+export const updateProfile = (profileData, navigate) => async (dispatch) => {
   try {
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-
-    const res = await axios.put(`${API_URL}/profiles`, profileData, config);
+    const res = await api.put('/profiles', profileData);
 
     dispatch({
       type: PROFILE_UPDATE_SUCCESS,
@@ -103,12 +94,9 @@ export const updateProfile = (profileData, navigate) => async (dispatch, getStat
 };
 
 // Add profile experience
-export const addExperience = (experienceData, navigate) => async (dispatch, getState) => {
+export const addExperience = (experienceData, navigate) => async (dispatch) => {
   try {
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-
-    const res = await axios.post(`${API_URL}/profiles/experience`, experienceData, config);
+    const res = await api.post('/profiles/experience', experienceData);
 
     dispatch({
       type: EXPERIENCE_ADD_SUCCESS,
@@ -133,12 +121,9 @@ export const addExperience = (experienceData, navigate) => async (dispatch, getS
 };
 
 // Delete profile experience
-export const deleteExperience = (experienceId) => async (dispatch, getState) => {
+export const deleteExperience = (experienceId) => async (dispatch) => {
   try {
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-
-    await axios.delete(`${API_URL}/profiles/experience/${experienceId}`, config);
+    await api.delete(`/profiles/experience/${experienceId}`);
 
     dispatch({
       type: EXPERIENCE_DELETE_SUCCESS,
@@ -159,12 +144,9 @@ export const deleteExperience = (experienceId) => async (dispatch, getState) => 
 };
 
 // Add profile education
-export const addEducation = (educationData, navigate) => async (dispatch, getState) => {
+export const addEducation = (educationData, navigate) => async (dispatch) => {
   try {
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-
-    const res = await axios.post(`${API_URL}/profiles/education`, educationData, config);
+    const res = await api.post('/profiles/education', educationData);
 
     dispatch({
       type: EDUCATION_ADD_SUCCESS,
@@ -189,12 +171,9 @@ export const addEducation = (educationData, navigate) => async (dispatch, getSta
 };
 
 // Delete profile education
-export const deleteEducation = (educationId) => async (dispatch, getState) => {
+export const deleteEducation = (educationId) => async (dispatch) => {
   try {
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-
-    await axios.delete(`${API_URL}/profiles/education/${educationId}`, config);
+    await api.delete(`/profiles/education/${educationId}`);
 
     dispatch({
       type: EDUCATION_DELETE_SUCCESS,
@@ -215,12 +194,9 @@ export const deleteEducation = (educationId) => async (dispatch, getState) => {
 };
 
 // Add profile skill
-export const addSkill = (skillData) => async (dispatch, getState) => {
+export const addSkill = (skillData) => async (dispatch) => {
   try {
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-
-    const res = await axios.post(`${API_URL}/profiles/skills`, skillData, config);
+    const res = await api.post('/profiles/skills', skillData);
 
     dispatch({
       type: SKILL_ADD_SUCCESS,
@@ -241,12 +217,9 @@ export const addSkill = (skillData) => async (dispatch, getState) => {
 };
 
 // Delete profile skill
-export const deleteSkill = (skillId) => async (dispatch, getState) => {
+export const deleteSkill = (skillId) => async (dispatch) => {
   try {
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-
-    await axios.delete(`${API_URL}/profiles/skills/${skillId}`, config);
+    await api.delete(`/profiles/skills/${skillId}`);
 
     dispatch({
       type: SKILL_DELETE_SUCCESS,

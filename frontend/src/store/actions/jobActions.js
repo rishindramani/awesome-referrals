@@ -1,4 +1,3 @@
-import axios from 'axios';
 import {
   JOBS_LOADING,
   JOBS_SUCCESS,
@@ -24,16 +23,14 @@ import {
   SET_ALERT
 } from './actionTypes';
 import { setAlert } from './uiActions';
-
-// API base URL
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+import api from '../../services/apiService';
 
 // Get all jobs
 export const getJobs = (page = 1, limit = 10) => async (dispatch) => {
   try {
     dispatch({ type: JOBS_LOADING });
     
-    const res = await axios.get(`${API_URL}/jobs?page=${page}&limit=${limit}`);
+    const res = await api.get(`/jobs?page=${page}&limit=${limit}`);
     
     dispatch({
       type: JOBS_SUCCESS,
@@ -56,7 +53,7 @@ export const getJobById = (id) => async (dispatch) => {
   try {
     dispatch({ type: JOB_DETAIL_LOADING });
     
-    const res = await axios.get(`${API_URL}/jobs/${id}`);
+    const res = await api.get(`/jobs/${id}`);
     
     dispatch({
       type: JOB_DETAIL_SUCCESS,
@@ -75,14 +72,11 @@ export const getJobById = (id) => async (dispatch) => {
 };
 
 // Create a new job (requires authentication)
-export const createJob = (jobData, navigate) => async (dispatch, getState) => {
+export const createJob = (jobData, navigate) => async (dispatch) => {
   try {
     dispatch({ type: JOB_CREATE_LOADING });
     
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-    
-    const res = await axios.post(`${API_URL}/jobs`, jobData, config);
+    const res = await api.post('/jobs', jobData);
     
     dispatch({
       type: JOB_CREATE_SUCCESS,
@@ -108,14 +102,11 @@ export const createJob = (jobData, navigate) => async (dispatch, getState) => {
 };
 
 // Update an existing job (requires authentication)
-export const updateJob = (id, jobData, navigate) => async (dispatch, getState) => {
+export const updateJob = (id, jobData, navigate) => async (dispatch) => {
   try {
     dispatch({ type: JOB_UPDATE_LOADING });
     
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-    
-    const res = await axios.put(`${API_URL}/jobs/${id}`, jobData, config);
+    const res = await api.put(`/jobs/${id}`, jobData);
     
     dispatch({
       type: JOB_UPDATE_SUCCESS,
@@ -141,12 +132,9 @@ export const updateJob = (id, jobData, navigate) => async (dispatch, getState) =
 };
 
 // Delete a job (requires authentication)
-export const deleteJob = (id, navigate) => async (dispatch, getState) => {
+export const deleteJob = (id, navigate) => async (dispatch) => {
   try {
-    const { token } = getState().auth;
-    const config = { headers: { 'Authorization': `Bearer ${token}` } };
-    
-    await axios.delete(`${API_URL}/jobs/${id}`, config);
+    await api.delete(`/jobs/${id}`);
     
     dispatch({
       type: JOB_DELETE_SUCCESS,
@@ -203,7 +191,7 @@ export const searchJobs = (searchParams) => async (dispatch) => {
       queryParams.append('limit', searchParams.limit);
     }
     
-    const res = await axios.get(`${API_URL}/jobs/search?${queryParams.toString()}`);
+    const res = await api.get(`/jobs/search?${queryParams.toString()}`);
     
     dispatch({
       type: JOB_SEARCH_SUCCESS,
@@ -226,7 +214,7 @@ export const getFeaturedJobs = (limit = 6) => async (dispatch) => {
   try {
     dispatch({ type: JOBS_LOADING });
     
-    const res = await axios.get(`${API_URL}/jobs/featured?limit=${limit}`);
+    const res = await api.get(`/jobs/featured?limit=${limit}`);
     
     dispatch({
       type: JOBS_SUCCESS,
@@ -249,7 +237,7 @@ export const getJobsByCompany = (companyId, page = 1, limit = 10) => async (disp
   try {
     dispatch({ type: JOBS_LOADING });
     
-    const res = await axios.get(`${API_URL}/companies/${companyId}/jobs?page=${page}&limit=${limit}`);
+    const res = await api.get(`/companies/${companyId}/jobs?page=${page}&limit=${limit}`);
     
     dispatch({
       type: JOBS_SUCCESS,
@@ -267,96 +255,73 @@ export const getJobsByCompany = (companyId, page = 1, limit = 10) => async (disp
   }
 };
 
-// Get user's saved jobs
+// Get saved jobs for the current user
 export const getSavedJobs = () => async (dispatch) => {
   try {
     dispatch({ type: SAVED_JOBS_LOADING });
     
-    const res = await axios.get(`${API_URL}/users/me/saved-jobs`);
+    const res = await api.get('/users/me/saved-jobs');
     
     dispatch({
       type: SAVED_JOBS_SUCCESS,
-      payload: res.data.jobs
+      payload: res.data
     });
   } catch (err) {
+    const errorMessage = err.response?.data?.message || 'Failed to fetch saved jobs';
+    
     dispatch({
       type: SAVED_JOBS_ERROR,
-      payload: err.response?.data?.message || 'Error fetching saved jobs'
+      payload: errorMessage
     });
+    
+    dispatch(setAlert(errorMessage, 'error'));
   }
 };
 
-// Get top trending jobs
-export const getTopJobs = () => async (dispatch) => {
+// Get top jobs
+export const getTopJobs = (limit = 5) => async (dispatch) => {
   try {
-    const res = await axios.get(`${API_URL}/jobs/top`);
+    const res = await api.get(`/jobs/top?limit=${limit}`);
     
     dispatch({
       type: TOP_JOBS_SUCCESS,
       payload: res.data.jobs
     });
   } catch (err) {
-    console.error('Error fetching top jobs:', err);
+    const errorMessage = err.response?.data?.message || 'Failed to fetch top jobs';
+    dispatch(setAlert(errorMessage, 'error'));
   }
 };
 
-// Save a job to user's favorites
+// Save a job for the current user
 export const saveJob = (jobId) => async (dispatch) => {
   try {
-    await axios.post(`${API_URL}/users/me/saved-jobs/${jobId}`);
+    await api.post('/users/me/saved-jobs', { jobId });
     
     dispatch({
       type: SAVE_JOB_SUCCESS,
-      payload: { jobId, removed: false }
+      payload: jobId
     });
     
-    dispatch({
-      type: SET_ALERT,
-      payload: {
-        id: new Date().getTime(),
-        type: 'success',
-        message: 'Job saved successfully'
-      }
-    });
+    dispatch(setAlert('Job saved successfully', 'success'));
+    
+    // Refresh saved jobs list
+    dispatch(getSavedJobs());
   } catch (err) {
-    dispatch({
-      type: SET_ALERT,
-      payload: {
-        id: new Date().getTime(),
-        type: 'error',
-        message: err.response?.data?.message || 'Error saving job'
-      }
-    });
+    const errorMessage = err.response?.data?.message || 'Failed to save job';
+    dispatch(setAlert(errorMessage, 'error'));
   }
 };
 
-// Remove a job from user's favorites
+// Remove a job from saved jobs
 export const unsaveJob = (jobId) => async (dispatch) => {
   try {
-    await axios.delete(`${API_URL}/users/me/saved-jobs/${jobId}`);
+    await api.delete(`/users/me/saved-jobs/${jobId}`);
     
-    // Dispatch success action to update saved jobs list
-    dispatch({
-      type: SAVE_JOB_SUCCESS,
-      payload: { jobId, removed: true }
-    });
-    
-    dispatch({
-      type: SET_ALERT,
-      payload: {
-        id: new Date().getTime(),
-        type: 'success',
-        message: 'Job removed from saved list'
-      }
-    });
+    dispatch(getSavedJobs());
+    dispatch(setAlert('Job removed from saved jobs', 'success'));
   } catch (err) {
-    dispatch({
-      type: SET_ALERT,
-      payload: {
-        id: new Date().getTime(),
-        type: 'error',
-        message: err.response?.data?.message || 'Error removing saved job'
-      }
-    });
+    const errorMessage = err.response?.data?.message || 'Failed to remove job from saved jobs';
+    dispatch(setAlert(errorMessage, 'error'));
   }
 }; 

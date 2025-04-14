@@ -7,65 +7,28 @@ import {
   Drawer,
   Divider,
   List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
   Button,
   Badge,
-  CircularProgress
+  CircularProgress,
+  Toolbar,
+  AppBar,
+  Stack
 } from '@mui/material';
 import {
   Close as CloseIcon,
   Notifications as NotificationIcon,
-  Email as EmailIcon,
-  Assignment as AssignmentIcon,
-  Work as WorkIcon,
-  CheckCircle as CheckCircleIcon,
-  CancelOutlined as CancelIcon,
-  DoneAll as DoneAllIcon
+  DoneAll as DoneAllIcon,
+  Refresh as RefreshIcon,
+  NotificationsOff as NotificationsOffIcon
 } from '@mui/icons-material';
 import { 
   fetchNotifications, 
   markNotificationRead, 
-  markAllNotificationsRead 
+  markAllNotificationsRead,
+  deleteNotification
 } from '../../store/actions/notificationActions';
 import { toggleNotificationPanel } from '../../store/actions/uiActions';
-
-const getNotificationIcon = (type) => {
-  switch (type) {
-    case 'referral_request':
-      return <AssignmentIcon color="primary" />;
-    case 'referral_accepted':
-      return <CheckCircleIcon color="success" />;
-    case 'referral_rejected':
-      return <CancelIcon color="error" />;
-    case 'job_match':
-      return <WorkIcon color="info" />;
-    case 'message':
-      return <EmailIcon color="secondary" />;
-    default:
-      return <NotificationIcon color="action" />;
-  }
-};
-
-const formatNotificationTime = (dateString) => {
-  const notificationDate = new Date(dateString);
-  const now = new Date();
-  const diffInMilliseconds = now - notificationDate;
-  const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
-  const diffInHours = Math.floor(diffInMilliseconds / (1000 * 60 * 60));
-  const diffInDays = Math.floor(diffInMilliseconds / (1000 * 60 * 60 * 24));
-
-  if (diffInMinutes < 60) {
-    return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
-  } else if (diffInHours < 24) {
-    return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
-  } else if (diffInDays < 7) {
-    return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
-  } else {
-    return notificationDate.toLocaleDateString();
-  }
-};
+import NotificationItem from './NotificationItem';
 
 const NotificationPanel = () => {
   const dispatch = useDispatch();
@@ -82,17 +45,20 @@ const NotificationPanel = () => {
     dispatch(toggleNotificationPanel());
   };
 
-  const handleNotificationClick = (notification) => {
-    if (!notification.isRead) {
-      dispatch(markNotificationRead(notification.id));
-    }
-    // Add navigation logic based on notification type
-    // e.g., navigate to referral detail, job detail, etc.
-    handleClose();
+  const handleNotificationRead = (notificationId) => {
+    dispatch(markNotificationRead(notificationId));
   };
 
   const handleMarkAllAsRead = () => {
     dispatch(markAllNotificationsRead());
+  };
+  
+  const handleDeleteNotification = (notificationId) => {
+    dispatch(deleteNotification(notificationId));
+  };
+  
+  const handleRefresh = () => {
+    dispatch(fetchNotifications());
   };
 
   return (
@@ -101,101 +67,95 @@ const NotificationPanel = () => {
       open={isNotificationPanelOpen}
       onClose={handleClose}
     >
-      <Box sx={{ width: { xs: '100vw', sm: 350 }, p: 0 }}>
-        <Box sx={{ 
-          p: 2, 
-          bgcolor: 'primary.main', 
-          color: 'primary.contrastText',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <Box display="flex" alignItems="center">
-            <Badge badgeContent={unreadCount} color="error">
-              <NotificationIcon />
-            </Badge>
-            <Typography variant="h6" sx={{ ml: 1 }}>
-              Notifications
-            </Typography>
-          </Box>
-          <IconButton 
-            edge="end" 
-            color="inherit" 
-            onClick={handleClose} 
-            aria-label="close"
-          >
-            <CloseIcon />
-          </IconButton>
-        </Box>
-        
-        {unreadCount > 0 && (
-          <Box sx={{ p: 1, bgcolor: 'background.default', textAlign: 'center' }}>
-            <Button 
-              size="small" 
-              onClick={handleMarkAllAsRead}
-              startIcon={<DoneAllIcon />}
-            >
-              Mark all as read
-            </Button>
-          </Box>
-        )}
-        
-        <Divider />
-        
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
-            <CircularProgress />
-          </Box>
-        ) : notifications.length === 0 ? (
-          <Box sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="body1" color="text.secondary">
-              No notifications to display
-            </Typography>
-          </Box>
-        ) : (
-          <List sx={{ p: 0 }}>
-            {notifications.map((notification) => (
-              <React.Fragment key={notification.id}>
-                <ListItem 
-                  button 
-                  onClick={() => handleNotificationClick(notification)}
-                  sx={{ 
-                    bgcolor: notification.isRead ? 'inherit' : 'action.hover',
-                    py: 1.5
-                  }}
+      <Box sx={{ width: { xs: '100vw', sm: 400 }, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <AppBar position="static" color="primary" elevation={0}>
+          <Toolbar>
+            <Box display="flex" alignItems="center" width="100%" justifyContent="space-between">
+              <Box display="flex" alignItems="center">
+                <Badge badgeContent={unreadCount} color="error">
+                  <NotificationIcon />
+                </Badge>
+                <Typography variant="h6" sx={{ ml: 1.5 }}>
+                  Notifications
+                </Typography>
+              </Box>
+              <Box>
+                <IconButton 
+                  color="inherit" 
+                  onClick={handleRefresh} 
+                  aria-label="refresh"
+                  disabled={loading}
                 >
-                  <ListItemIcon sx={{ minWidth: 40 }}>
-                    {getNotificationIcon(notification.type)}
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={
-                      <Typography 
-                        variant="body1" 
-                        sx={{ 
-                          fontWeight: notification.isRead ? 'normal' : 'bold',
-                          mb: 0.5
-                        }}
-                      >
-                        {notification.title}
-                      </Typography>
-                    }
-                    secondary={
-                      <>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                          {notification.message}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {formatNotificationTime(notification.createdAt)}
-                        </Typography>
-                      </>
-                    }
+                  <RefreshIcon />
+                </IconButton>
+                <IconButton 
+                  color="inherit" 
+                  onClick={handleClose} 
+                  aria-label="close"
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            </Box>
+          </Toolbar>
+          
+          {unreadCount > 0 && (
+            <Box sx={{ px: 2, pb: 1 }}>
+              <Button 
+                size="small" 
+                onClick={handleMarkAllAsRead}
+                startIcon={<DoneAllIcon />}
+                variant="outlined"
+                color="inherit"
+                fullWidth
+              >
+                Mark all as read
+              </Button>
+            </Box>
+          )}
+        </AppBar>
+        
+        <Box sx={{ 
+          flexGrow: 1, 
+          overflow: 'auto', 
+          bgcolor: 'background.paper',
+          borderTop: 1,
+          borderColor: 'divider'
+        }}>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
+              <CircularProgress />
+            </Box>
+          ) : notifications.length === 0 ? (
+            <Box sx={{ 
+              p: 3, 
+              textAlign: 'center', 
+              display: 'flex', 
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: 200
+            }}>
+              <NotificationsOffIcon color="disabled" sx={{ fontSize: 48, mb: 2 }} />
+              <Typography variant="body1" color="text.secondary">
+                No notifications to display
+              </Typography>
+            </Box>
+          ) : (
+            <List disablePadding>
+              {notifications.map((notification) => (
+                <React.Fragment key={notification.id}>
+                  <NotificationItem 
+                    notification={notification} 
+                    onRead={handleNotificationRead}
+                    onDelete={handleDeleteNotification}
                   />
-                </ListItem>
-                <Divider />
-              </React.Fragment>
-            ))}
-          </List>
-        )}
+                  <Divider component="li" />
+                </React.Fragment>
+              ))}
+            </List>
+          )}
+        </Box>
       </Box>
     </Drawer>
   );

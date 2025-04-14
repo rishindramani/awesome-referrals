@@ -1,20 +1,35 @@
 const { Sequelize } = require('sequelize');
 const config = require('./index');
 const logger = require('../utils/logger');
+const path = require('path');
 
 // Create Sequelize instance
-const sequelize = new Sequelize(
-  config.database.database,
-  config.database.username,
-  config.database.password,
-  {
-    host: config.database.host,
-    port: config.database.port,
-    dialect: config.database.dialect,
-    logging: config.database.logging ? msg => logger.debug(msg) : false,
-    pool: config.database.pool
-  }
-);
+let sequelize;
+
+// Use SQLite for development
+if (config.nodeEnv === 'development') {
+  const dbPath = path.join(__dirname, '../../db.sqlite');
+  sequelize = new Sequelize({
+    dialect: 'sqlite',
+    storage: dbPath,
+    logging: config.database.logging ? msg => logger.debug(msg) : false
+  });
+  logger.info(`Using SQLite database at ${dbPath}`);
+} else {
+  // Use PostgreSQL for production
+  sequelize = new Sequelize(
+    config.database.database,
+    config.database.username,
+    config.database.password,
+    {
+      host: config.database.host,
+      port: config.database.port,
+      dialect: config.database.dialect,
+      logging: config.database.logging ? msg => logger.debug(msg) : false,
+      pool: config.database.pool
+    }
+  );
+}
 
 // Test database connection
 const connectDB = async () => {

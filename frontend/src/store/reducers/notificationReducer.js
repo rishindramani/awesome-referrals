@@ -3,7 +3,8 @@ import {
   FETCH_NOTIFICATIONS_SUCCESS,
   FETCH_NOTIFICATIONS_ERROR,
   MARK_NOTIFICATION_READ,
-  MARK_ALL_NOTIFICATIONS_READ
+  MARK_ALL_NOTIFICATIONS_READ,
+  DELETE_NOTIFICATION_SUCCESS
 } from '../actions/actionTypes';
 
 const initialState = {
@@ -57,6 +58,18 @@ const notificationReducer = (state = initialState, action) => {
           isRead: true
         })),
         unreadCount: 0
+      };
+    
+    case DELETE_NOTIFICATION_SUCCESS:
+      const updatedNotifications = state.notifications.filter(
+        notification => notification.id !== action.payload
+      );
+      const newUnreadCount = updatedNotifications.filter(n => !n.isRead).length;
+      
+      return {
+        ...state,
+        notifications: updatedNotifications,
+        unreadCount: newUnreadCount
       };
     
     default:

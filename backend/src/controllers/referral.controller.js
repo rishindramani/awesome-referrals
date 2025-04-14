@@ -1,10 +1,9 @@
-const ReferralRequest = require('../models/referralRequest.model');
-const User = require('../models/user.model');
-const Job = require('../models/job.model');
-const Company = require('../models/company.model');
-const AppError = require('../utils/appError');
+const { User, Company, Job } = require('../models');
+const ReferralRequest = require('../models/referral-request.model');
+const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
 const logger = require('../utils/logger');
+const NotificationService = require('../services/notification.service');
 
 /**
  * Get all referral requests for a user
@@ -197,7 +196,19 @@ exports.createReferralRequest = async (req, res, next) => {
       ]
     });
 
-    // TODO: Send notification to referrer
+    // Send notification to referrer
+    try {
+      await NotificationService.sendReferralRequestNotification({
+        referrerId: referrer_id,
+        seekerName: `${req.user.first_name} ${req.user.last_name}`,
+        jobTitle: job.title,
+        companyName: job.Company ? job.Company.name : 'the company',
+        referralId: referralRequest.id
+      });
+    } catch (notificationError) {
+      logger.error('Error sending notification:', notificationError);
+      // Don't fail the request if notification fails
+    }
 
     res.status(201).json({
       status: 'success',
@@ -219,11 +230,31 @@ exports.createReferralRequest = async (req, res, next) => {
  */
 exports.updateReferralRequest = async (req, res, next) => {
   try {
-    const referralRequest = await ReferralRequest.findByPk(req.params.id);
+    const referralRequest = await ReferralRequest.findByPk(req.params.id, {
+      include: [
+        {
+          model: User,
+          as: 'seeker',
+          attributes: ['id', 'first_name', 'last_name', 'email', 'avatar_url']
+        },
+        {
+          model: User,
+          as: 'referrer',
+          attributes: ['id', 'first_name', 'last_name', 'email', 'avatar_url']
+        },
+        {
+          model: Job,
+          include: [{ model: Company }]
+        }
+      ]
+    });
 
     if (!referralRequest) {
       return next(new AppError('Referral request not found', 404));
     }
+
+    // Store the original status to check if it changed
+    const originalStatus = referralRequest.status;
 
     // Only allow seeker to update if pending and they are the seeker
     // Only allow referrer to update status and feedback
@@ -288,7 +319,22 @@ exports.updateReferralRequest = async (req, res, next) => {
       ]
     });
 
-    // TODO: Send notification of status change
+    // Send notification of status change if status was updated
+    if (req.body.status && req.body.status !== originalStatus) {
+      try {
+        await NotificationService.sendReferralStatusNotification({
+          seekerId: referralRequest.seeker_id,
+          referrerName: `${referralRequest.referrer.first_name} ${referralRequest.referrer.last_name}`,
+          status: req.body.status,
+          jobTitle: referralRequest.Job.title,
+          companyName: referralRequest.Job.Company ? referralRequest.Job.Company.name : 'the company',
+          referralId: referralRequest.id
+        });
+      } catch (notificationError) {
+        logger.error('Error sending status notification:', notificationError);
+        // Don't fail the request if notification fails
+      }
+    }
 
     res.status(200).json({
       status: 'success',

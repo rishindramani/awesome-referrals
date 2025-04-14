@@ -23,14 +23,14 @@ import {
   SET_ALERT
 } from './actionTypes';
 import { setAlert } from './uiActions';
-import api from '../../services/apiService';
+import apiService from '../../services/apiService';
 
 // Get all jobs
 export const getJobs = (page = 1, limit = 10) => async (dispatch) => {
   try {
     dispatch({ type: JOBS_LOADING });
     
-    const res = await api.get(`/jobs?page=${page}&limit=${limit}`);
+    const res = await apiService.jobs.getAll({ page, limit });
     
     dispatch({
       type: JOBS_SUCCESS,
@@ -48,12 +48,12 @@ export const getJobs = (page = 1, limit = 10) => async (dispatch) => {
   }
 };
 
-// Get job by ID
+// Get job details by ID
 export const getJobById = (id) => async (dispatch) => {
   try {
     dispatch({ type: JOB_DETAIL_LOADING });
     
-    const res = await api.get(`/jobs/${id}`);
+    const res = await apiService.jobs.getById(id);
     
     dispatch({
       type: JOB_DETAIL_SUCCESS,
@@ -76,7 +76,7 @@ export const createJob = (jobData, navigate) => async (dispatch) => {
   try {
     dispatch({ type: JOB_CREATE_LOADING });
     
-    const res = await api.post('/jobs', jobData);
+    const res = await apiService.jobs.create(jobData);
     
     dispatch({
       type: JOB_CREATE_SUCCESS,
@@ -101,12 +101,12 @@ export const createJob = (jobData, navigate) => async (dispatch) => {
   }
 };
 
-// Update an existing job (requires authentication)
+// Update a job (requires authentication)
 export const updateJob = (id, jobData, navigate) => async (dispatch) => {
   try {
     dispatch({ type: JOB_UPDATE_LOADING });
     
-    const res = await api.put(`/jobs/${id}`, jobData);
+    const res = await apiService.jobs.update(id, jobData);
     
     dispatch({
       type: JOB_UPDATE_SUCCESS,
@@ -134,7 +134,7 @@ export const updateJob = (id, jobData, navigate) => async (dispatch) => {
 // Delete a job (requires authentication)
 export const deleteJob = (id, navigate) => async (dispatch) => {
   try {
-    await api.delete(`/jobs/${id}`);
+    await apiService.jobs.delete(id);
     
     dispatch({
       type: JOB_DELETE_SUCCESS,
@@ -159,39 +159,12 @@ export const deleteJob = (id, navigate) => async (dispatch) => {
   }
 };
 
-// Search jobs by keywords, location, etc.
+// Search jobs by keyword, location, or other criteria
 export const searchJobs = (searchParams) => async (dispatch) => {
   try {
     dispatch({ type: JOBS_LOADING });
     
-    // Construct query string from searchParams object
-    const queryParams = new URLSearchParams();
-    
-    if (searchParams.keywords) {
-      queryParams.append('keywords', searchParams.keywords);
-    }
-    
-    if (searchParams.location) {
-      queryParams.append('location', searchParams.location);
-    }
-    
-    if (searchParams.companyId) {
-      queryParams.append('companyId', searchParams.companyId);
-    }
-    
-    if (searchParams.jobType) {
-      queryParams.append('jobType', searchParams.jobType);
-    }
-    
-    if (searchParams.page) {
-      queryParams.append('page', searchParams.page);
-    }
-    
-    if (searchParams.limit) {
-      queryParams.append('limit', searchParams.limit);
-    }
-    
-    const res = await api.get(`/jobs/search?${queryParams.toString()}`);
+    const res = await apiService.jobs.search(searchParams);
     
     dispatch({
       type: JOB_SEARCH_SUCCESS,
@@ -209,58 +182,12 @@ export const searchJobs = (searchParams) => async (dispatch) => {
   }
 };
 
-// Get featured or top jobs
-export const getFeaturedJobs = (limit = 6) => async (dispatch) => {
-  try {
-    dispatch({ type: JOBS_LOADING });
-    
-    const res = await api.get(`/jobs/featured?limit=${limit}`);
-    
-    dispatch({
-      type: JOBS_SUCCESS,
-      payload: res.data
-    });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to fetch featured jobs';
-    
-    dispatch({
-      type: JOBS_ERROR,
-      payload: errorMessage
-    });
-    
-    dispatch(setAlert(errorMessage, 'error'));
-  }
-};
-
-// Get jobs by company
-export const getJobsByCompany = (companyId, page = 1, limit = 10) => async (dispatch) => {
-  try {
-    dispatch({ type: JOBS_LOADING });
-    
-    const res = await api.get(`/companies/${companyId}/jobs?page=${page}&limit=${limit}`);
-    
-    dispatch({
-      type: JOBS_SUCCESS,
-      payload: res.data
-    });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to fetch company jobs';
-    
-    dispatch({
-      type: JOBS_ERROR,
-      payload: errorMessage
-    });
-    
-    dispatch(setAlert(errorMessage, 'error'));
-  }
-};
-
 // Get saved jobs for the current user
 export const getSavedJobs = () => async (dispatch) => {
   try {
     dispatch({ type: SAVED_JOBS_LOADING });
     
-    const res = await api.get('/users/me/saved-jobs');
+    const res = await apiService.jobs.getSaved();
     
     dispatch({
       type: SAVED_JOBS_SUCCESS,
@@ -278,25 +205,10 @@ export const getSavedJobs = () => async (dispatch) => {
   }
 };
 
-// Get top jobs
-export const getTopJobs = (limit = 5) => async (dispatch) => {
-  try {
-    const res = await api.get(`/jobs/top?limit=${limit}`);
-    
-    dispatch({
-      type: TOP_JOBS_SUCCESS,
-      payload: res.data.jobs
-    });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to fetch top jobs';
-    dispatch(setAlert(errorMessage, 'error'));
-  }
-};
-
 // Save a job for the current user
 export const saveJob = (jobId) => async (dispatch) => {
   try {
-    await api.post('/users/me/saved-jobs', { jobId });
+    await apiService.jobs.saveJob(jobId);
     
     dispatch({
       type: SAVE_JOB_SUCCESS,
@@ -304,24 +216,40 @@ export const saveJob = (jobId) => async (dispatch) => {
     });
     
     dispatch(setAlert('Job saved successfully', 'success'));
-    
-    // Refresh saved jobs list
-    dispatch(getSavedJobs());
   } catch (err) {
     const errorMessage = err.response?.data?.message || 'Failed to save job';
     dispatch(setAlert(errorMessage, 'error'));
   }
 };
 
-// Remove a job from saved jobs
+// Unsave (remove) a job for the current user
 export const unsaveJob = (jobId) => async (dispatch) => {
   try {
-    await api.delete(`/users/me/saved-jobs/${jobId}`);
+    await apiService.jobs.unsaveJob(jobId);
     
-    dispatch(getSavedJobs());
-    dispatch(setAlert('Job removed from saved jobs', 'success'));
+    dispatch({
+      type: 'UNSAVE_JOB_SUCCESS',
+      payload: jobId
+    });
+    
+    dispatch(setAlert('Job removed from saved list', 'success'));
   } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to remove job from saved jobs';
+    const errorMessage = err.response?.data?.message || 'Failed to remove saved job';
+    dispatch(setAlert(errorMessage, 'error'));
+  }
+};
+
+// Get top/featured jobs
+export const getTopJobs = (limit) => async (dispatch) => {
+  try {
+    const res = await apiService.jobs.getTopJobs();
+    
+    dispatch({
+      type: TOP_JOBS_SUCCESS,
+      payload: res.data
+    });
+  } catch (err) {
+    const errorMessage = err.response?.data?.message || 'Failed to fetch top jobs';
     dispatch(setAlert(errorMessage, 'error'));
   }
 }; 

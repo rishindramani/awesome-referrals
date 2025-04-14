@@ -1,187 +1,154 @@
-import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { 
-  Box, 
-  Button, 
-  Container, 
-  Divider, 
-  Grid, 
-  Link, 
-  Paper, 
-  TextField, 
+import { Formik, Form } from 'formik';
+import * as Yup from 'yup';
+import {
+  Container,
   Typography,
-  IconButton,
-  InputAdornment,
-  Alert,
+  Box,
+  Button,
+  TextField,
+  Link,
+  Paper,
+  Grid,
+  Divider,
   CircularProgress
 } from '@mui/material';
 import { 
-  Visibility, 
-  VisibilityOff, 
-  LinkedIn as LinkedInIcon
+  Login as LoginIcon, 
+  LinkedIn as LinkedInIcon,
+  PersonAdd as PersonAddIcon
 } from '@mui/icons-material';
-import { login } from '../store/actions/authActions';
-import { Formik, Form, Field } from 'formik';
-import * as Yup from 'yup';
+import { useAuth } from '../hooks';
 
+// Validation schema
 const validationSchema = Yup.object({
   email: Yup.string()
-    .email('Enter a valid email')
+    .email('Invalid email address')
     .required('Email is required'),
   password: Yup.string()
-    .min(8, 'Password should be of minimum 8 characters length')
     .required('Password is required')
 });
 
 const Login = () => {
-  const dispatch = useDispatch();
-  const { loading, error } = useSelector(state => state.auth);
-  const [showPassword, setShowPassword] = useState(false);
-  
+  const { loading, loginUser } = useAuth();
+
   const handleSubmit = (values) => {
-    dispatch(login(values.email, values.password));
+    loginUser(values.email, values.password);
   };
-  
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
-  
+
   return (
-    <Container maxWidth="xs" sx={{ mt: 8, mb: 8 }}>
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-        <Box display="flex" flexDirection="column" alignItems="center">
-          <Typography component="h1" variant="h4" gutterBottom fontWeight="bold">
-            Welcome Back
-          </Typography>
-          <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 3 }}>
-            Log in to your account to access your referrals and job applications
-          </Typography>
-          
-          {error && (
-            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          
-          <Formik
-            initialValues={{ email: '', password: '' }}
-            validationSchema={validationSchema}
-            onSubmit={handleSubmit}
+    <Container component="main" maxWidth="sm">
+      <Box 
+        sx={{ 
+          my: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Paper 
+          elevation={3} 
+          sx={{ 
+            p: 4, 
+            width: '100%',
+            borderRadius: 2
+          }}
+        >
+          <Box 
+            sx={{ 
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
           >
-            {({ errors, touched }) => (
-              <Form style={{ width: '100%' }}>
-                <Field
-                  as={TextField}
-                  margin="normal"
-                  fullWidth
-                  id="email"
-                  label="Email Address"
-                  name="email"
-                  autoComplete="email"
-                  error={touched.email && Boolean(errors.email)}
-                  helperText={touched.email && errors.email}
-                  variant="outlined"
-                  autoFocus
-                />
-                
-                <Field
-                  as={TextField}
-                  margin="normal"
-                  fullWidth
-                  name="password"
-                  label="Password"
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  autoComplete="current-password"
-                  error={touched.password && Boolean(errors.password)}
-                  helperText={touched.password && errors.password}
-                  variant="outlined"
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          aria-label="toggle password visibility"
-                          onClick={handleClickShowPassword}
-                          edge="end"
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    )
-                  }}
-                />
-                
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                  sx={{ mt: 3, mb: 2, py: 1.5, borderRadius: 2, fontWeight: 'bold' }}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <CircularProgress size={24} color="inherit" />
-                  ) : (
-                    'Sign In'
-                  )}
-                </Button>
-                
-                <Box display="flex" justifyContent="center" mt={1} mb={3}>
-                  <Link
-                    component={RouterLink}
-                    to="/forgot-password"
-                    variant="body2"
+            <Typography component="h1" variant="h4" sx={{ mb: 3, fontWeight: 'bold' }}>
+              Login
+            </Typography>
+
+            <Formik
+              initialValues={{ email: '', password: '' }}
+              validationSchema={validationSchema}
+              onSubmit={handleSubmit}
+            >
+              {({ values, errors, touched, handleChange, handleBlur }) => (
+                <Form style={{ width: '100%' }}>
+                  <TextField
+                    fullWidth
+                    margin="normal"
+                    label="Email Address"
+                    name="email"
+                    type="email"
+                    value={values.email}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={touched.email && Boolean(errors.email)}
+                    helperText={touched.email && errors.email}
+                    disabled={loading}
+                  />
+                  
+                  <TextField
+                    fullWidth
+                    margin="normal"
+                    label="Password"
+                    name="password"
+                    type="password"
+                    value={values.password}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={touched.password && Boolean(errors.password)}
+                    helperText={touched.password && errors.password}
+                    disabled={loading}
+                  />
+                  
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
                     color="primary"
+                    size="large"
+                    disabled={loading}
+                    sx={{ mt: 3, mb: 2 }}
+                    startIcon={loading ? <CircularProgress size={24} color="inherit" /> : <LoginIcon />}
                   >
-                    Forgot password?
+                    {loading ? 'Logging in...' : 'Login'}
+                  </Button>
+                  
+                  <Box sx={{ mt: 1, textAlign: 'center' }}>
+                    <Link component={RouterLink} to="/forgot-password" variant="body2">
+                      Forgot password?
+                    </Link>
+                  </Box>
+                </Form>
+              )}
+            </Formik>
+            
+            <Divider sx={{ width: '100%', my: 3 }}>or</Divider>
+            
+            <Button
+              fullWidth
+              variant="outlined"
+              color="primary"
+              size="large"
+              startIcon={<LinkedInIcon />}
+              sx={{ mb: 2 }}
+            >
+              Sign in with LinkedIn
+            </Button>
+            
+            <Grid container justifyContent="center">
+              <Grid item>
+                <Typography variant="body2">
+                  Don't have an account?{' '}
+                  <Link component={RouterLink} to="/register" variant="body2" sx={{ fontWeight: 'bold' }}>
+                    Register
                   </Link>
-                </Box>
-                
-                <Divider sx={{ my: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    OR
-                  </Typography>
-                </Divider>
-                
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  color="primary"
-                  sx={{ 
-                    mt: 1, 
-                    mb: 2, 
-                    py: 1.5, 
-                    borderRadius: 2,
-                    textTransform: 'none'
-                  }}
-                  startIcon={<LinkedInIcon />}
-                >
-                  Sign in with LinkedIn
-                </Button>
-              </Form>
-            )}
-          </Formik>
-          
-          <Grid container justifyContent="center" mt={3}>
-            <Grid item>
-              <Typography variant="body2" color="text.secondary">
-                Don't have an account?{' '}
-                <Link
-                  component={RouterLink}
-                  to="/register"
-                  variant="body2"
-                  fontWeight="bold"
-                  color="primary"
-                >
-                  Sign Up
-                </Link>
-              </Typography>
+                </Typography>
+              </Grid>
             </Grid>
-          </Grid>
-        </Box>
-      </Paper>
+          </Box>
+        </Paper>
+      </Box>
     </Container>
   );
 };

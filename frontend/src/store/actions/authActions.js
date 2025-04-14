@@ -10,14 +10,14 @@ import {
   PROFILE_UPDATE_ERROR
 } from './actionTypes';
 import { setAlert } from './uiActions';
-import api from '../../services/apiService';
+import apiService from '../../services/apiService';
 
 // Login user
 export const login = (email, password) => async (dispatch) => {
   try {
     dispatch({ type: AUTH_START });
     
-    const res = await api.post('/auth/login', { email, password });
+    const res = await apiService.auth.login({ email, password });
     
     localStorage.setItem('token', res.data.token);
     dispatch({
@@ -37,7 +37,7 @@ export const register = (userData) => async (dispatch) => {
   try {
     dispatch({ type: REGISTER_START });
     
-    const res = await api.post('/auth/register', userData);
+    const res = await apiService.auth.register(userData);
     
     localStorage.setItem('token', res.data.token);
     dispatch({
@@ -70,7 +70,7 @@ export const checkAuth = () => async (dispatch) => {
   try {
     dispatch({ type: AUTH_START });
     
-    const res = await api.get('/auth/me');
+    const res = await apiService.auth.getUser();
     
     dispatch({
       type: AUTH_SUCCESS,
@@ -85,7 +85,7 @@ export const checkAuth = () => async (dispatch) => {
 // Update user profile
 export const updateProfile = (profileData) => async (dispatch) => {
   try {
-    const res = await api.put('/auth/profile', profileData);
+    const res = await apiService.users.updateProfile(profileData);
     
     dispatch({
       type: PROFILE_UPDATE_SUCCESS,
@@ -102,9 +102,11 @@ export const updateProfile = (profileData) => async (dispatch) => {
 // Update password
 export const updatePassword = (passwordData) => async (dispatch) => {
   try {
-    const res = await api.put('/auth/password', passwordData);
+    const res = await apiService.auth.updatePassword(passwordData);
     
-    localStorage.setItem('token', res.data.token);
+    if (res.data.token) {
+      localStorage.setItem('token', res.data.token);
+    }
     dispatch(setAlert('Password updated successfully', 'success'));
   } catch (err) {
     const errorMessage = err.response?.data?.message || 'Failed to update password';

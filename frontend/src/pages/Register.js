@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { 
   Box, 
   Button, 
@@ -13,7 +12,6 @@ import {
   Typography,
   IconButton,
   InputAdornment,
-  Alert,
   CircularProgress,
   FormControl,
   InputLabel,
@@ -26,34 +24,44 @@ import {
   VisibilityOff, 
   LinkedIn as LinkedInIcon
 } from '@mui/icons-material';
-import { register } from '../store/actions/authActions';
-import { Formik, Form, Field } from 'formik';
-import * as Yup from 'yup';
-
-const validationSchema = Yup.object({
-  firstName: Yup.string()
-    .required('First name is required'),
-  lastName: Yup.string()
-    .required('Last name is required'),
-  email: Yup.string()
-    .email('Enter a valid email')
-    .required('Email is required'),
-  password: Yup.string()
-    .min(8, 'Password should be of minimum 8 characters length')
-    .required('Password is required'),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref('password'), null], 'Passwords must match')
-    .required('Confirm password is required'),
-  userType: Yup.string()
-    .required('Please select your role')
-});
+import { useAuth } from '../hooks';
+import { useForm } from '../hooks';
+import { validation } from '../utils';
 
 const Register = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { loading, error } = useSelector(state => state.auth);
+  const { loading, registerUser } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Initialize form with custom hook
+  const { 
+    values, 
+    errors, 
+    touched, 
+    handleChange, 
+    handleBlur, 
+    handleSubmit 
+  } = useForm(
+    {
+      first_name: '',
+      last_name: '',
+      email: '',
+      password: '',
+      confirm_password: '',
+      user_type: 'job_seeker'
+    },
+    (values) => {
+      const userData = {
+        first_name: values.first_name,
+        last_name: values.last_name,
+        email: values.email,
+        password: values.password,
+        user_type: values.user_type
+      };
+      registerUser(userData);
+    },
+    (values) => validation.validateForm(values, validation.registrationValidation)
+  );
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
@@ -79,171 +87,140 @@ const Register = () => {
           </Typography>
         </Box>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
-
-        <Formik
-          initialValues={{
-            firstName: '',
-            lastName: '',
-            email: '',
-            password: '',
-            confirmPassword: '',
-            userType: 'job_seeker'
-          }}
-          validationSchema={validationSchema}
-          onSubmit={(values, { setSubmitting }) => {
-            const userData = {
-              firstName: values.firstName,
-              lastName: values.lastName,
-              email: values.email,
-              password: values.password,
-              userType: values.userType
-            };
-            dispatch(register(userData));
-            setSubmitting(false);
-          }}
-        >
-          {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting }) => (
-            <Form onSubmit={handleSubmit}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    id="firstName"
-                    name="firstName"
-                    label="First Name"
-                    value={values.firstName}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.firstName && Boolean(errors.firstName)}
-                    helperText={touched.firstName && errors.firstName}
-                    margin="normal"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    id="lastName"
-                    name="lastName"
-                    label="Last Name"
-                    value={values.lastName}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.lastName && Boolean(errors.lastName)}
-                    helperText={touched.lastName && errors.lastName}
-                    margin="normal"
-                  />
-                </Grid>
-              </Grid>
-
+        <form onSubmit={handleSubmit}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                id="email"
-                name="email"
-                label="Email Address"
-                value={values.email}
+                id="first_name"
+                name="first_name"
+                label="First Name"
+                value={values.first_name}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                error={touched.email && Boolean(errors.email)}
-                helperText={touched.email && errors.email}
+                error={touched.first_name && Boolean(errors.first_name)}
+                helperText={touched.first_name && errors.first_name}
                 margin="normal"
               />
-
+            </Grid>
+            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                id="password"
-                name="password"
-                label="Password"
-                type={showPassword ? 'text' : 'password'}
-                value={values.password}
+                id="last_name"
+                name="last_name"
+                label="Last Name"
+                value={values.last_name}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                error={touched.password && Boolean(errors.password)}
-                helperText={touched.password && errors.password}
+                error={touched.last_name && Boolean(errors.last_name)}
+                helperText={touched.last_name && errors.last_name}
                 margin="normal"
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="toggle password visibility"
-                        onClick={handleClickShowPassword}
-                        onMouseDown={handleMouseDownPassword}
-                        edge="end"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  )
-                }}
               />
+            </Grid>
+          </Grid>
 
-              <TextField
-                fullWidth
-                id="confirmPassword"
-                name="confirmPassword"
-                label="Confirm Password"
-                type={showConfirmPassword ? 'text' : 'password'}
-                value={values.confirmPassword}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                error={touched.confirmPassword && Boolean(errors.confirmPassword)}
-                helperText={touched.confirmPassword && errors.confirmPassword}
-                margin="normal"
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="toggle password visibility"
-                        onClick={handleClickShowConfirmPassword}
-                        onMouseDown={handleMouseDownPassword}
-                        edge="end"
-                      >
-                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  )
-                }}
-              />
+          <TextField
+            fullWidth
+            id="email"
+            name="email"
+            label="Email Address"
+            value={values.email}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.email && Boolean(errors.email)}
+            helperText={touched.email && errors.email}
+            margin="normal"
+          />
 
-              <FormControl 
-                fullWidth 
-                margin="normal"
-                error={touched.userType && Boolean(errors.userType)}
-              >
-                <InputLabel id="user-type-label">I am a</InputLabel>
-                <Select
-                  labelId="user-type-label"
-                  id="userType"
-                  name="userType"
-                  value={values.userType}
-                  label="I am a"
-                  onChange={handleChange}
-                >
-                  <MenuItem value="job_seeker">Job Seeker</MenuItem>
-                  <MenuItem value="referrer">Referrer</MenuItem>
-                </Select>
-                {touched.userType && errors.userType && (
-                  <FormHelperText>{errors.userType}</FormHelperText>
-                )}
-              </FormControl>
+          <TextField
+            fullWidth
+            id="password"
+            name="password"
+            label="Password"
+            type={showPassword ? 'text' : 'password'}
+            value={values.password}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.password && Boolean(errors.password)}
+            helperText={touched.password && errors.password}
+            margin="normal"
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    onMouseDown={handleMouseDownPassword}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
+          />
 
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                size="large"
-                disabled={loading}
-                sx={{ mt: 3, mb: 2 }}
-              >
-                {loading ? <CircularProgress size={24} /> : 'Create Account'}
-              </Button>
-            </Form>
-          )}
-        </Formik>
+          <TextField
+            fullWidth
+            id="confirm_password"
+            name="confirm_password"
+            label="Confirm Password"
+            type={showConfirmPassword ? 'text' : 'password'}
+            value={values.confirm_password}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.confirm_password && Boolean(errors.confirm_password)}
+            helperText={touched.confirm_password && errors.confirm_password}
+            margin="normal"
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowConfirmPassword}
+                    onMouseDown={handleMouseDownPassword}
+                    edge="end"
+                  >
+                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
+          />
+
+          <FormControl 
+            fullWidth 
+            margin="normal"
+            error={touched.user_type && Boolean(errors.user_type)}
+          >
+            <InputLabel id="user-type-label">I am a</InputLabel>
+            <Select
+              labelId="user-type-label"
+              id="user_type"
+              name="user_type"
+              value={values.user_type}
+              label="I am a"
+              onChange={handleChange}
+            >
+              <MenuItem value="job_seeker">Job Seeker</MenuItem>
+              <MenuItem value="referrer">Referrer</MenuItem>
+            </Select>
+            {touched.user_type && errors.user_type && (
+              <FormHelperText>{errors.user_type}</FormHelperText>
+            )}
+          </FormControl>
+
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            size="large"
+            disabled={loading}
+            sx={{ mt: 3, mb: 2 }}
+          >
+            {loading ? <CircularProgress size={24} /> : 'Create Account'}
+          </Button>
+        </form>
 
         <Divider sx={{ my: 3 }}>
           <Typography variant="body2" color="text.secondary">
@@ -255,27 +232,19 @@ const Register = () => {
           fullWidth
           variant="outlined"
           startIcon={<LinkedInIcon />}
-          sx={{ mb: 2 }}
+          sx={{ mb: 3, py: 1.5 }}
         >
           Sign up with LinkedIn
         </Button>
 
-        <Grid container justifyContent="center" mt={3}>
-          <Grid item>
-            <Typography variant="body2" color="text.secondary">
-              Already have an account?{' '}
-              <Link
-                component={RouterLink}
-                to="/login"
-                variant="body2"
-                fontWeight="bold"
-                color="primary"
-              >
-                Sign In
-              </Link>
-            </Typography>
-          </Grid>
-        </Grid>
+        <Box textAlign="center">
+          <Typography variant="body2" color="text.secondary">
+            Already have an account?{' '}
+            <Link component={RouterLink} to="/login" color="primary">
+              Log in
+            </Link>
+          </Typography>
+        </Box>
       </Paper>
     </Container>
   );

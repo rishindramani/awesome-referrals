@@ -7,7 +7,7 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 
 const config = require('./config');
-const errorHandler = require('./middleware/errorHandler');
+const { errorHandler } = require('./middleware/errorHandler');
 const logger = require('./utils/logger');
 
 // Import routes
@@ -16,7 +16,10 @@ const userRoutes = require('./routes/user.routes');
 const jobRoutes = require('./routes/job.routes');
 const referralRoutes = require('./routes/referral.routes');
 const companyRoutes = require('./routes/company.routes');
-const rewardRoutes = require('./routes/reward.routes');
+const notificationRoutes = require('./routes/notification.routes');
+// Add our new routes
+const conversationRoutes = require('./routes/conversation.routes');
+const messageRoutes = require('./routes/message.routes');
 
 // Create Express app
 const app = express();
@@ -45,8 +48,13 @@ app.use('/api', limiter);
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// Enable CORS
-app.use(cors());
+// Enable CORS with specific configuration
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
 // Compression middleware
 app.use(compression());
@@ -57,7 +65,9 @@ app.use('/api/users', userRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/companies', companyRoutes);
-app.use('/api/rewards', rewardRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/conversations', conversationRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -65,7 +75,17 @@ app.get('/api/health', (req, res) => {
     status: 'success',
     message: 'Server is up and running',
     environment: config.nodeEnv,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    version: '1.0.0',
+    apis: {
+      auth: 'READY',
+      jobs: 'READY',
+      referrals: 'READY',
+      companies: 'READY',
+      notifications: 'READY',
+      conversations: 'READY',
+      messages: 'READY'
+    }
   });
 });
 

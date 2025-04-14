@@ -44,6 +44,8 @@ import {
   Camera as CameraIcon,
   LinkedIn as LinkedInIcon
 } from '@mui/icons-material';
+import ProfileForm from '../components/profile/ProfileForm';
+import { useAuth } from '../hooks';
 
 // Sample user data
 const userData = {
@@ -109,13 +111,12 @@ const userData = {
 };
 
 const Profile = () => {
+  const { user, loading: authLoading, updateUserProfile, updateUserPassword } = useAuth();
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [editMode, setEditMode] = useState(false);
-  const [formData, setFormData] = useState({});
-  const [skillInput, setSkillInput] = useState('');
+  const [formError, setFormError] = useState(null);
   const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -125,84 +126,30 @@ const Profile = () => {
   const [passwordError, setPasswordError] = useState('');
   
   useEffect(() => {
-    // Simulate API call
-    setLoading(true);
-    setTimeout(() => {
-      setUser(userData);
-      setFormData({
-        first_name: userData.first_name,
-        last_name: userData.last_name,
-        email: userData.email,
-        headline: userData.headline,
-        bio: userData.bio,
-        location: userData.location,
-        phone: userData.phone,
-        skills: [...userData.skills]
-      });
+    // Only keep the loading state until the auth data is loaded
+    if (!authLoading && user) {
       setLoading(false);
-    }, 800);
-    
-    // In a real app, we would dispatch an action to fetch user profile
-    // dispatch(fetchUserProfile());
-  }, [dispatch]);
+    }
+  }, [authLoading, user]);
   
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
   
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-  };
-  
   const toggleEditMode = () => {
-    if (editMode) {
-      // Reset form data if canceling edit
-      setFormData({
-        first_name: user.first_name,
-        last_name: user.last_name,
-        email: user.email,
-        headline: user.headline,
-        bio: user.bio,
-        location: user.location,
-        phone: user.phone,
-        skills: [...user.skills]
-      });
-    }
     setEditMode(!editMode);
+    setFormError(null);
   };
   
-  const handleSaveProfile = () => {
-    // In a real app, we would dispatch an action to update the profile
-    // dispatch(updateProfile(formData));
-    
-    // For demo purposes, update the local state
-    setUser({
-      ...user,
-      ...formData
-    });
-    setEditMode(false);
-  };
-  
-  const handleAddSkill = (e) => {
-    e.preventDefault();
-    if (skillInput.trim() && !formData.skills.includes(skillInput.trim())) {
-      setFormData({
-        ...formData,
-        skills: [...formData.skills, skillInput.trim()]
-      });
-      setSkillInput('');
+  const handleSaveProfile = async (formData) => {
+    try {
+      // Use the useAuth hook to update the profile
+      await updateUserProfile(formData);
+      setEditMode(false);
+      setFormError(null);
+    } catch (error) {
+      setFormError(error.message || 'Failed to update profile');
     }
-  };
-  
-  const handleRemoveSkill = (skillToRemove) => {
-    setFormData({
-      ...formData,
-      skills: formData.skills.filter(skill => skill !== skillToRemove)
-    });
   };
   
   const handleOpenPasswordDialog = () => {
@@ -227,7 +174,7 @@ const Profile = () => {
     });
   };
   
-  const handleUpdatePassword = () => {
+  const handleUpdatePassword = async () => {
     const { currentPassword, newPassword, confirmPassword } = passwordData;
     
     // Basic validation
@@ -246,12 +193,18 @@ const Profile = () => {
       return;
     }
     
-    // In a real app, we would dispatch an action to update the password
-    // dispatch(updatePassword(passwordData));
-    
-    // For demo purposes, just close the dialog
-    handleClosePasswordDialog();
-    // And maybe show a success message
+    try {
+      // Use the useAuth hook to update the password
+      await updateUserPassword({
+        current_password: currentPassword,
+        new_password: newPassword
+      });
+      
+      // Close the dialog on success
+      handleClosePasswordDialog();
+    } catch (error) {
+      setPasswordError(error.message || 'Failed to update password');
+    }
   };
   
   if (loading) {
@@ -269,6 +222,21 @@ const Profile = () => {
       </Container>
     );
   }
+
+  // Prepare profile data for the form
+  const profileData = {
+    first_name: user.first_name,
+    last_name: user.last_name,
+    email: user.email,
+    headline: user.headline,
+    bio: user.bio,
+    location: user.location,
+    phone: user.phone,
+    profile_picture_url: user.profile_picture_url,
+    linkedin_url: user.linkedin_profile,
+    linkedin_verified: user.linkedin_verified,
+    skills: [...user.skills]
+  };
   
   return (
     <Container maxWidth="lg">
@@ -459,129 +427,13 @@ const Profile = () => {
               {activeTab === 0 && (
                 <>
                   {editMode ? (
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="First Name"
-                          name="first_name"
-                          variant="outlined"
-                          value={formData.first_name}
-                          onChange={handleInputChange}
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Last Name"
-                          name="last_name"
-                          variant="outlined"
-                          value={formData.last_name}
-                          onChange={handleInputChange}
-                        />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField
-                          fullWidth
-                          label="Headline"
-                          name="headline"
-                          variant="outlined"
-                          value={formData.headline}
-                          onChange={handleInputChange}
-                          placeholder="e.g., Senior Software Engineer at Google"
-                        />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField
-                          fullWidth
-                          label="Bio"
-                          name="bio"
-                          variant="outlined"
-                          multiline
-                          rows={4}
-                          value={formData.bio}
-                          onChange={handleInputChange}
-                          placeholder="Tell us about yourself..."
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Email"
-                          name="email"
-                          variant="outlined"
-                          type="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Phone"
-                          name="phone"
-                          variant="outlined"
-                          value={formData.phone}
-                          onChange={handleInputChange}
-                        />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField
-                          fullWidth
-                          label="Location"
-                          name="location"
-                          variant="outlined"
-                          value={formData.location}
-                          onChange={handleInputChange}
-                          placeholder="e.g., San Francisco, CA"
-                        />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <Typography variant="subtitle1" gutterBottom>
-                          Skills
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
-                          {formData.skills.map((skill, index) => (
-                            <Chip
-                              key={index}
-                              label={skill}
-                              onDelete={() => handleRemoveSkill(skill)}
-                              color="primary"
-                              variant="outlined"
-                            />
-                          ))}
-                        </Box>
-                        <Box component="form" onSubmit={handleAddSkill} sx={{ display: 'flex' }}>
-                          <TextField
-                            fullWidth
-                            size="small"
-                            placeholder="Add a skill"
-                            value={skillInput}
-                            onChange={(e) => setSkillInput(e.target.value)}
-                            variant="outlined"
-                          />
-                          <Button 
-                            type="submit"
-                            variant="contained"
-                            color="primary"
-                            sx={{ ml: 1 }}
-                            disabled={!skillInput.trim()}
-                          >
-                            <AddIcon />
-                          </Button>
-                        </Box>
-                      </Grid>
-                      <Grid item xs={12} sx={{ mt: 2, textAlign: 'right' }}>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          startIcon={<SaveIcon />}
-                          onClick={handleSaveProfile}
-                        >
-                          Save Changes
-                        </Button>
-                      </Grid>
-                    </Grid>
+                    <ProfileForm
+                      initialData={profileData}
+                      onSubmit={handleSaveProfile}
+                      onCancel={toggleEditMode}
+                      loading={false}
+                      error={formError}
+                    />
                   ) : (
                     <Grid container spacing={3}>
                       <Grid item xs={12}>

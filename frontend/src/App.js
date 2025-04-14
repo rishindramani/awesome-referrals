@@ -1,11 +1,10 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Box, CircularProgress } from '@mui/material';
 
 // Components
 import MainLayout from './components/layouts/MainLayout';
-import ProtectedRoute from './components/common/ProtectedRoute';
+import { ProtectedRoute, ErrorBoundary, LoadingFallback } from './components/common';
 
 // Pages
 import Home from './pages/Home';
@@ -32,67 +31,90 @@ const App = () => {
   }, [dispatch]);
 
   if (loading) {
-    return (
-      <Box 
-        display="flex" 
-        justifyContent="center" 
-        alignItems="center" 
-        minHeight="100vh"
-      >
-        <CircularProgress />
-      </Box>
-    );
+    return <LoadingFallback height={600} message="Loading application..." />;
   }
 
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route path="/" element={<MainLayout />}>
-        <Route index element={<Home />} />
-        <Route path="login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} />
-        <Route path="register" element={!isAuthenticated ? <Register /> : <Navigate to="/dashboard" />} />
-        
-        {/* Protected routes */}
-        <Route path="dashboard" element={
-          <ProtectedRoute isAuthenticated={isAuthenticated}>
-            <Dashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="jobs" element={
-          <ProtectedRoute isAuthenticated={isAuthenticated}>
-            <JobSearch />
-          </ProtectedRoute>
-        } />
-        <Route path="jobs/:id" element={
-          <ProtectedRoute isAuthenticated={isAuthenticated}>
-            <JobDetail />
-          </ProtectedRoute>
-        } />
-        <Route path="companies" element={
-          <ProtectedRoute isAuthenticated={isAuthenticated}>
-            <Companies />
-          </ProtectedRoute>
-        } />
-        <Route path="companies/:id" element={
-          <ProtectedRoute isAuthenticated={isAuthenticated}>
-            <CompanyDetail />
-          </ProtectedRoute>
-        } />
-        <Route path="profile" element={
-          <ProtectedRoute isAuthenticated={isAuthenticated}>
-            <Profile />
-          </ProtectedRoute>
-        } />
-        <Route path="referrals" element={
-          <ProtectedRoute isAuthenticated={isAuthenticated}>
-            <ReferralRequests />
-          </ProtectedRoute>
-        } />
-        
-        {/* 404 route */}
-        <Route path="*" element={<NotFound />} />
-      </Route>
-    </Routes>
+    <ErrorBoundary>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={
+            <ErrorBoundary>
+              <Home />
+            </ErrorBoundary>
+          } />
+          <Route path="login" element={!isAuthenticated ? 
+            <ErrorBoundary>
+              <Login />
+            </ErrorBoundary> : <Navigate to="/dashboard" />
+          } />
+          <Route path="register" element={!isAuthenticated ? 
+            <ErrorBoundary>
+              <Register />
+            </ErrorBoundary> : <Navigate to="/dashboard" />
+          } />
+          
+          {/* Protected routes */}
+          <Route path="dashboard" element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ErrorBoundary>
+                <Dashboard />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          } />
+          <Route path="jobs" element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ErrorBoundary>
+                <JobSearch />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          } />
+          <Route path="jobs/:id" element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ErrorBoundary>
+                <JobDetail />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          } />
+          <Route path="companies" element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ErrorBoundary>
+                <Companies />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          } />
+          <Route path="companies/:id" element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ErrorBoundary>
+                <CompanyDetail />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          } />
+          <Route path="profile" element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ErrorBoundary>
+                <Profile />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          } />
+          <Route path="referrals" element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ErrorBoundary>
+                <ReferralRequests />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          } />
+          
+          {/* 404 route */}
+          <Route path="*" element={
+            <ErrorBoundary>
+              <NotFound />
+            </ErrorBoundary>
+          } />
+        </Route>
+      </Routes>
+    </ErrorBoundary>
   );
 };
 

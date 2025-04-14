@@ -3,7 +3,8 @@ import {
   FETCH_NOTIFICATIONS_SUCCESS,
   FETCH_NOTIFICATIONS_ERROR,
   MARK_NOTIFICATION_READ,
-  MARK_ALL_NOTIFICATIONS_READ
+  MARK_ALL_NOTIFICATIONS_READ,
+  DELETE_NOTIFICATION_SUCCESS
 } from './actionTypes';
 import { setAlert } from './uiActions';
 import api from '../../services/apiService';
@@ -49,6 +50,21 @@ export const markAllNotificationsRead = () => async (dispatch) => {
     dispatch(setAlert('All notifications marked as read', 'success'));
   } catch (err) {
     const errorMessage = err.response?.data?.message || 'Failed to mark all notifications as read';
+    dispatch(setAlert(errorMessage, 'error'));
+  }
+};
+
+// Delete a notification
+export const deleteNotification = (notificationId) => async (dispatch) => {
+  try {
+    await api.delete(`/notifications/${notificationId}`);
+    
+    dispatch({
+      type: DELETE_NOTIFICATION_SUCCESS,
+      payload: notificationId
+    });
+  } catch (err) {
+    const errorMessage = err.response?.data?.message || 'Failed to delete notification';
     dispatch(setAlert(errorMessage, 'error'));
   }
 }; 

@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const { AppError } = require('./errorHandler');
 const config = require('../config');
 const logger = require('../utils/logger');
+const User = require('../models/user.model'); // Import User model
 
 // Mock user for development - keep this for simplicity if backend db isn't fully set up
 const mockUser = {
@@ -37,14 +38,12 @@ exports.protect = async (req, res, next) => {
       const decoded = jwt.verify(token, config.jwt.secret);
       logger.debug(`Token verified for user ID: ${decoded.id}`);
       
-      // In development mode, attach mock user for now
-      // Replace this with actual user lookup when db is ready
-      if (config.nodeEnv === 'development') {
-        req.user = mockUser; 
-      } else {
-        // TODO: Implement actual user lookup from database based on decoded.id
-        return next(new AppError('User lookup not implemented for production', 500));
+      // Real user lookup from DB
+      const user = await User.findByPk(decoded.id);
+      if (!user) {
+        return next(new AppError('User not found', 401));
       }
+      req.user = user;
       
     } catch (jwtError) {
       logger.error('JWT verification error:', jwtError);

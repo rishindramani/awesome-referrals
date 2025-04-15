@@ -34,7 +34,7 @@ const Login = () => {
   const { loading, login } = useAuthContext();
 
   const handleSubmit = (values) => {
-    login(values.email, values.password);
+    login({ email: values.email, password: values.password });
   };
 
   return (

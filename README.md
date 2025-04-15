@@ -27,6 +27,7 @@ The project has completed Phase 1 (Foundation) and is currently in Phase 2 (Core
 - Express server with production-ready configuration
 - Database models and relationships
 - Authentication system with JWT
+- **[NEW] Real user lookup in authentication middleware (no more mock user in dev)**
 - User management API endpoints
 - Error handling and logging
 - API rate limiting for security
@@ -65,6 +66,7 @@ See the [project plan](./project-plan.md) for detailed information about the roa
 | Save Jobs Functionality          | ✅ Complete | 2      | Users can save jobs for later             |
 | Referral System                  | 🔄 In Progress | 2   | Basic functionality in place              |
 | Messaging System                 | 🔄 In Progress | 2   | Models created, UI in development        |
+| **Real User Lookup in Auth**     | ✅ Complete | 2      | Backend now fetches user from DB          |
 | LinkedIn Verification            | ⏳ Pending   | 3     | OAuth integration required                |
 | Analytics Dashboard              | ⏳ Pending   | 3     | Data collection in progress               |
 | Admin Features                   | ⏳ Pending   | 3     | Not started                               |

@@ -2,6 +2,8 @@ const jwt = require('jsonwebtoken');
 const config = require('../config');
 const { AppError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
+const User = require('../models/user.model');
+const bcrypt = require('bcryptjs');
 
 // Mock user database for development
 const mockUsers = {
@@ -36,14 +38,13 @@ const signToken = (id) => {
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user.id);
   
-  // Remove password from output
-  const userResponse = { ...user };
-  delete userResponse.password_hash;
+  // Convert Sequelize model to plain object if needed
+  const userObj = user.toJSON ? user.toJSON() : user;
   
   res.status(statusCode).json({
     status: 'success',
     token,
-    user: userResponse
+    user: userObj
   });
 };
 
@@ -55,31 +56,52 @@ exports.register = async (req, res, next) => {
     const { email, password, firstName, lastName, userType } = req.body;
     
     // Check if user already exists
-    if (mockUsers[email]) {
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
       logger.warn(`Registration failed: User already exists with email ${email}`);
       return next(new AppError('User already exists with this email', 400));
     }
     
-    // Create new user
-    logger.info(`Creating new user with email: ${email}`);
-    const newUser = {
-      id: Date.now().toString(),
-      email,
-      password_hash: 'hashed_password', // In a real app, this would be hashed
-      first_name: firstName,
-      last_name: lastName,
-      user_type: userType || 'job_seeker',
-      verified: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    // Validate password length
+    if (!password || password.length < 8) {
+      return next(new AppError('Password must be at least 8 characters long', 400));
+    }
     
-    // Add to mock database
-    mockUsers[email] = newUser;
-    
-    // Create and send token
-    logger.info(`User created successfully with ID: ${newUser.id}`);
-    createSendToken(newUser, 201, res);
+    try {
+      // Generate password hash
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      
+      // Create new user in the database
+      logger.info(`Creating new user with email: ${email}`);
+      logger.debug('User data being created:', {
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        user_type: userType || 'job_seeker'
+      });
+      
+      const newUser = await User.create({
+        email,
+        password_hash: hashedPassword, // Set password_hash directly
+        first_name: firstName,
+        last_name: lastName,
+        user_type: userType || 'job_seeker',
+        verified: false
+      });
+      
+      // Create and send token
+      logger.info(`User created successfully with ID: ${newUser.id}`);
+      createSendToken(newUser, 201, res);
+    } catch (validationError) {
+      logger.error('User creation validation error details:', {
+        name: validationError.name,
+        message: validationError.message,
+        errors: validationError.errors,
+        stack: validationError.stack
+      });
+      return next(new AppError(validationError.message, 400));
+    }
   } catch (error) {
     logger.error('Registration error details:', {
       message: error.message,
@@ -103,15 +125,19 @@ exports.login = async (req, res, next) => {
       return next(new AppError('Please provide email and password', 400));
     }
     
-    // Check if user exists
-    const user = mockUsers[email];
+    // Check if user exists and get password
+    const user = await User.findOne({ 
+      where: { email },
+      attributes: { include: ['password_hash'] } // Include password hash for verification
+    });
+    
     if (!user) {
       logger.warn(`Login failed: No user found with email ${email}`);
       return next(new AppError('Incorrect email or password', 401));
     }
     
     // Check if password is correct
-    const isPasswordValid = validatePassword(password, user.password_hash);
+    const isPasswordValid = await user.validatePassword(password);
     if (!isPasswordValid) {
       logger.warn(`Login failed: Invalid password for email ${email}`);
       return next(new AppError('Incorrect email or password', 401));

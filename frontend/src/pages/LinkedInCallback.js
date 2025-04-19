@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Box, Typography, CircularProgress, Container, Paper } from '@mui/material';
 import { setAlert } from '../store/actions/uiActions';
-import { loadUser } from '../store/actions/authActions';
+import { checkAuth } from '../store/actions/authActions';
 
 const LinkedInCallback = () => {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ const LinkedInCallback = () => {
         localStorage.setItem('token', token);
         
         // Load user information
-        dispatch(loadUser());
+        dispatch(checkAuth());
         
         // Show success message and redirect to dashboard
         dispatch(setAlert('Successfully authenticated with LinkedIn', 'success'));

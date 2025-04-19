@@ -13,6 +13,13 @@ class AppError extends Error {
   }
 }
 
+// Async error handler to avoid try-catch blocks
+const catchAsync = fn => {
+  return (req, res, next) => {
+    fn(req, res, next).catch(next);
+  };
+};
+
 // Handle Sequelize validation errors
 const handleSequelizeValidationError = (err) => {
   const errors = Object.values(err.errors).map(el => el.message);
@@ -78,5 +85,6 @@ const errorHandler = (err, req, res, next) => {
 
 module.exports = {
   errorHandler,
-  AppError
+  AppError,
+  catchAsync
 }; 

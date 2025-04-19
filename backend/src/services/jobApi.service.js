@@ -1,7 +1,7 @@
 const axios = require('axios');
 const config = require('../config');
-const logger = require('../utils/logger');
 const { AppError } = require('../middleware/errorHandler');
+const logger = require('../utils/logger');
 
 /**
  * Service for fetching jobs from external APIs like Naukri.com and LinkedIn

@@ -1,5 +1,5 @@
 const jobApiService = require('../services/jobApi.service');
-const { catchAsync } = require('../utils/errors');
+const { catchAsync } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
 
 /**

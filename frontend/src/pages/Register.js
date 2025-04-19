@@ -27,6 +27,7 @@ import {
 import { useAuthContext } from '../context/AuthContext';
 import { useForm } from '../hooks';
 import { validation } from '../utils';
+import { apiService } from '../services/apiService';
 
 const Register = () => {
   const { loading, register } = useAuthContext();
@@ -233,6 +234,7 @@ const Register = () => {
           variant="outlined"
           startIcon={<LinkedInIcon />}
           sx={{ mb: 3, py: 1.5 }}
+          onClick={() => apiService.auth.linkedinAuth()}
         >
           Sign up with LinkedIn
         </Button>

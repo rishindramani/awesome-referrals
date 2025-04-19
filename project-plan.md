@@ -69,31 +69,36 @@ Awesome Referrals is a platform connecting job seekers with employees at target 
   - ✅ Referral Requests
   - ✅ User Profile
 
-## Phase 2: Core Functionality (In Progress)
+## Phase 2: Core Functionality (In Progress - 85% Complete)
 
 ### Backend Development
 
 - [x] Real user lookup in auth middleware (backend now fetches user from DB after JWT verification, replacing mock user)
-- [ ] Implement job listing API with search and filters
-- [ ] Create endpoints for referral requests
-- [ ] Develop user profile management
-- [ ] Build notification system
-- [ ] Integrate with external job APIs (e.g., Naukri.com)
+- [x] Implement job listing API with search and filters
+- [x] Create endpoints for referral requests
+- [x] Develop user profile management
+- [x] Build notification system
+- [x] Integrate with external job APIs (e.g., Naukri.com, LinkedIn)
 
 ### Frontend Development
 
-- [ ] Implement job browsing and search functionality
-- [ ] Create referral request workflow
-- [ ] Build messaging system between referrers and seekers
-- [ ] Complete user profile management
-- [ ] Develop analytics dashboard
+- [x] Implement job browsing and search functionality
+- [x] Create referral request workflow
+- [x] Build messaging system between referrers and seekers
+- [x] Complete user profile management
+- [x] Develop enhanced analytics dashboard
 
-## Phase 3: Enhanced Features
+### Recently Completed (New Additions)
+- [x] Refactored all Redux action creators to use centralized apiService
+- [x] Implemented consistent error handling and return patterns across action creators
+- [x] Enhanced frontend-backend communication architecture
+- [x] Standardized API request patterns for improved maintainability
+- [x] Implemented LinkedIn integration for authentication and profile verification
+
+## Phase 3: Enhanced Features (Upcoming)
 
 ### Backend Development
 
-- [ ] LinkedIn integration for verification
-- [ ] Resume parsing and job matching algorithms
 - [ ] Advanced analytics for job application tracking
 - [ ] Recommendation engine
 - [ ] Admin dashboard and moderation tools
@@ -124,24 +129,25 @@ Awesome Referrals is a platform connecting job seekers with employees at target 
 - [ ] UI/UX refinements
 - [ ] Comprehensive testing
 
-## Timeline
+## Revised Timeline
 
 - **Phase 1 (Foundation)**: Completed
-- **Phase 2 (Core Functionality)**: Current focus
-- **Phase 3 (Enhanced Features)**: Planned after Phase 2 completion
-- **Phase 4 (Polishing and Scaling)**: Final phase
+- **Phase 2 (Core Functionality)**: 85% complete, estimated completion by end of Q2 2023
+- **Phase 3 (Enhanced Features)**: Planned for Q3 2023
+- **Phase 4 (Polishing and Scaling)**: Planned for Q4 2023
 
-## Key Milestones
+## Updated Key Milestones
 
 1. ✅ MVP with basic authentication and user profiles
 2. ✅ Job search and details implementation
-3. ✅ Referral request system basic functionality
-4. [ ] Complete messaging system
-5. [ ] LinkedIn integration
-6. [ ] Analytics and recommendation engine
-7. [ ] Admin dashboard and moderation tools
-8. [ ] Mobile-optimized version
-9. [ ] Production deployment with scaling
+3. ✅ Referral request system core functionality
+4. ✅ Centralized API service with consistent patterns
+5. ✅ Basic messaging system
+6. ✅ LinkedIn integration
+7. 🔄 Enhanced analytics and recommendation engine (In Progress)
+8. ⏳ Admin dashboard and moderation tools (Pending)
+9. ⏳ Mobile-optimized version (Pending)
+10. ⏳ Production deployment with scaling (Pending)
 
 ## Challenges and Solutions
 

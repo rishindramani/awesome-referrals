@@ -20,6 +20,8 @@ const notificationRoutes = require('./routes/notification.routes');
 // Add our new routes
 const conversationRoutes = require('./routes/conversation.routes');
 const messageRoutes = require('./routes/message.routes');
+const statsRoutes = require('./routes/stats.routes');
+const externalJobRoutes = require('./routes/externalJob.routes');
 
 // Create Express app
 const app = express();
@@ -68,6 +70,8 @@ app.use('/api/companies', companyRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/stats', statsRoutes);
+app.use('/api/external-jobs', externalJobRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -84,7 +88,9 @@ app.get('/api/health', (req, res) => {
       companies: 'READY',
       notifications: 'READY',
       conversations: 'READY',
-      messages: 'READY'
+      messages: 'READY',
+      stats: 'READY',
+      'external-jobs': 'READY'
     }
   });
 });

@@ -8,26 +8,31 @@ import {
   TOP_COMPANIES_SUCCESS
 } from './actionTypes';
 import { setAlert } from './uiActions';
-import api from '../../services/apiService';
+import { apiService } from '../../services/apiService';
 
 // Get all companies with pagination
-export const getCompanies = (page = 1, limit = 10) => async (dispatch) => {
+export const getCompanies = (params) => async (dispatch) => {
   try {
     dispatch({ type: COMPANIES_LOADING });
     
-    const res = await api.get(`/companies?page=${page}&limit=${limit}`);
+    const response = await apiService.companies.getAll(params);
     
     dispatch({
       type: COMPANIES_SUCCESS,
       payload: {
-        companies: res.data.companies,
-        pagination: res.data.pagination
+        companies: response.data.companies,
+        pagination: response.data.pagination
       }
     });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to fetch companies';
+    
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to fetch companies';
+    
     dispatch({ type: COMPANIES_ERROR, payload: errorMessage });
     dispatch(setAlert(errorMessage, 'error'));
+    
+    return null;
   }
 };
 
@@ -36,51 +41,66 @@ export const getCompanyById = (id) => async (dispatch) => {
   try {
     dispatch({ type: COMPANY_DETAIL_LOADING });
     
-    const res = await api.get(`/companies/${id}`);
+    const response = await apiService.companies.getById(id);
     
     dispatch({
       type: COMPANY_DETAIL_SUCCESS,
-      payload: res.data
+      payload: response.data
     });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to fetch company details';
+    
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to fetch company details';
+    
     dispatch({ type: COMPANY_DETAIL_ERROR, payload: errorMessage });
     dispatch(setAlert(errorMessage, 'error'));
+    
+    return null;
   }
 };
 
 // Search companies
-export const searchCompanies = (searchTerm) => async (dispatch) => {
+export const searchCompanies = (searchParams) => async (dispatch) => {
   try {
     dispatch({ type: COMPANIES_LOADING });
     
-    const res = await api.get(`/companies/search?q=${encodeURIComponent(searchTerm)}`);
+    const response = await apiService.companies.search(searchParams);
     
     dispatch({
       type: COMPANIES_SUCCESS,
       payload: {
-        companies: res.data.companies,
-        pagination: res.data.pagination
+        companies: response.data.companies,
+        pagination: response.data.pagination
       }
     });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to search companies';
+    
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to search companies';
+    
     dispatch({ type: COMPANIES_ERROR, payload: errorMessage });
     dispatch(setAlert(errorMessage, 'error'));
+    
+    return null;
   }
 };
 
 // Get top companies
 export const getTopCompanies = (limit = 5) => async (dispatch) => {
   try {
-    const res = await api.get(`/companies/top?limit=${limit}`);
+    const response = await apiService.companies.getTopCompanies();
     
     dispatch({
       type: TOP_COMPANIES_SUCCESS,
-      payload: res.data.companies
+      payload: response.data.companies
     });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to fetch top companies';
+    
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to fetch top companies';
+    
     dispatch(setAlert(errorMessage, 'error'));
+    
+    return null;
   }
 }; 

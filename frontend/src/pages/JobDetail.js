@@ -346,8 +346,15 @@ const JobDetail = () => {
                 size="large"
                 fullWidth
                 sx={{ mb: 2 }}
+                onClick={() => {
+                  // Scroll to referrers section
+                  document.getElementById('referrers-section').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                  });
+                }}
               >
-                Request Referral
+                Find Referrers
               </Button>
               
               <Box sx={{ display: 'flex', gap: 1 }}>
@@ -598,7 +605,7 @@ const JobDetail = () => {
       </Dialog>
       
       {/* Potential Referrers Section */}
-      <Box sx={{ mt: 4 }}>
+      <Box id="referrers-section" sx={{ mt: 4 }}>
         <Typography variant="h5" gutterBottom>
           Potential Referrers
         </Typography>
@@ -629,7 +636,8 @@ const JobDetail = () => {
                     variant="contained" 
                     color="primary" 
                     fullWidth
-                    onClick={() => handleReferralRequest(referrer)}
+                    component={RouterLink}
+                    to={`/referrals/new/${job.id}/${referrer.id}`}
                   >
                     Request Referral
                   </Button>

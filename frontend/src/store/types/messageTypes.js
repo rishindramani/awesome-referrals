@@ -1,0 +1,12 @@
+// Conversation related types
+export const SET_CONVERSATIONS = 'SET_CONVERSATIONS';
+export const SET_CURRENT_CONVERSATION = 'SET_CURRENT_CONVERSATION';
+export const SET_CONVERSATION_LOADING = 'SET_CONVERSATION_LOADING';
+
+// Message related types
+export const SET_MESSAGES = 'SET_MESSAGES';
+export const ADD_MESSAGE = 'ADD_MESSAGE';
+export const SET_MESSAGES_LOADING = 'SET_MESSAGES_LOADING';
+
+// Reset state
+export const RESET_CONVERSATION_STATE = 'RESET_CONVERSATION_STATE'; 

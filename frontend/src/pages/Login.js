@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import {
@@ -20,6 +20,7 @@ import {
   PersonAdd as PersonAddIcon
 } from '@mui/icons-material';
 import { useAuthContext } from '../context/AuthContext';
+import { apiService } from '../services/apiService';
 
 // Validation schema
 const validationSchema = Yup.object({
@@ -32,6 +33,7 @@ const validationSchema = Yup.object({
 
 const Login = () => {
   const { loading, login } = useAuthContext();
+  const navigate = useNavigate();
 
   const handleSubmit = (values) => {
     login({ email: values.email, password: values.password });
@@ -132,6 +134,7 @@ const Login = () => {
               size="large"
               startIcon={<LinkedInIcon />}
               sx={{ mb: 2 }}
+              onClick={() => apiService.auth.linkedinAuth()}
             >
               Sign in with LinkedIn
             </Button>

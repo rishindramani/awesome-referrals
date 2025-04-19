@@ -9,6 +9,7 @@ import uiReducer from './reducers/uiReducer';
 import statsReducer from './reducers/statsReducer';
 import notificationReducer from './reducers/notificationReducer';
 import companyReducer from './reducers/companyReducer';
+import messageReducer from './reducers/messageReducer';
 
 // Combine reducers
 const rootReducer = combineReducers({
@@ -18,7 +19,8 @@ const rootReducer = combineReducers({
   ui: uiReducer,
   stats: statsReducer,
   notifications: notificationReducer,
-  companies: companyReducer
+  companies: companyReducer,
+  messages: messageReducer
 });
 
 // Create store with middleware

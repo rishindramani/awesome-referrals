@@ -1,10 +1,11 @@
 import {
-  STATS_LOADING,
-  STATS_SUCCESS,
-  STATS_ERROR,
-  USER_STATS_LOADING,
-  USER_STATS_SUCCESS,
-  USER_STATS_ERROR
+  SET_STATS_LOADING,
+  SET_STATS_ERROR,
+  SET_USER_STATS,
+  SET_REFERRAL_STATS,
+  SET_JOB_STATS,
+  SET_PLATFORM_STATS,
+  SET_STATS_TIME_PERIOD
 } from '../actions/actionTypes';
 
 const initialState = {
@@ -15,7 +16,10 @@ const initialState = {
     successfulHires: 0,
     totalUsers: 0,
     totalCompanies: 0,
-    totalJobs: 0
+    totalJobs: 0,
+    activeUsers: 0,
+    jobsPostedThisMonth: 0,
+    referralsThisMonth: 0
   },
   userStats: {
     totalReferralsRequested: 0,
@@ -23,73 +27,79 @@ const initialState = {
     pendingReferrals: 0,
     acceptedReferrals: 0,
     rejectedReferrals: 0,
-    successfulHires: 0
+    successfulHires: 0,
+    responseRate: 0,
+    averageResponseTime: 0,
+    savedJobs: 0
   },
-  companyStats: {},
-  categoryStats: [],
+  referralStats: {
+    byStatus: [],
+    byCompany: [],
+    byTime: [],
+    successRate: 0
+  },
+  jobStats: {
+    byCategory: [],
+    byLocation: [],
+    byCompany: [],
+    mostViewed: [],
+    mostRequested: []
+  },
+  timePeriod: 'all', // 'week', 'month', 'year', 'all'
   loading: false,
-  userStatsLoading: false,
   error: null
 };
 
 const statsReducer = (state = initialState, action) => {
-  switch (action.type) {
-    case STATS_LOADING:
+  const { type, payload } = action;
+
+  switch (type) {
+    case SET_STATS_LOADING:
       return {
         ...state,
         loading: true,
         error: null
       };
     
-    case STATS_SUCCESS:
-      // Handle different types of statistics being returned
-      if (action.payload.statsType === 'company') {
-        return {
-          ...state,
-          companyStats: action.payload,
-          loading: false
-        };
-      } else if (action.payload.statsType === 'jobCategories') {
-        return {
-          ...state,
-          categoryStats: action.payload.categories,
-          loading: false
-        };
-      } else {
-        // Default to platform stats
-        return {
-          ...state,
-          platformStats: action.payload,
-          loading: false
-        };
-      }
-    
-    case STATS_ERROR:
+    case SET_STATS_ERROR:
       return {
         ...state,
         loading: false,
-        error: action.payload
+        error: payload
       };
     
-    case USER_STATS_LOADING:
+    case SET_USER_STATS:
       return {
         ...state,
-        userStatsLoading: true,
-        error: null
+        userStats: payload,
+        loading: false
       };
     
-    case USER_STATS_SUCCESS:
+    case SET_REFERRAL_STATS:
       return {
         ...state,
-        userStats: action.payload,
-        userStatsLoading: false
+        referralStats: payload,
+        loading: false
       };
     
-    case USER_STATS_ERROR:
+    case SET_JOB_STATS:
       return {
         ...state,
-        userStatsLoading: false,
-        error: action.payload
+        jobStats: payload,
+        loading: false
+      };
+    
+    case SET_PLATFORM_STATS:
+      return {
+        ...state,
+        platformStats: payload,
+        loading: false
+      };
+    
+    case SET_STATS_TIME_PERIOD:
+      return {
+        ...state,
+        timePeriod: payload
       };
     
     default:

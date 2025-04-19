@@ -31,7 +31,9 @@ import {
   Notifications as NotificationsIcon,
   ExitToApp as LogoutIcon,
   ChevronLeft as ChevronLeftIcon,
-  Business as BusinessIcon
+  Business as BusinessIcon,
+  BarChart as AnalyticsIcon,
+  Chat as ChatIcon
 } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -74,6 +76,8 @@ const MainLayout = () => {
     { text: 'Job Search', icon: <JobIcon />, path: '/jobs', auth: true },
     { text: 'Companies', icon: <BusinessIcon />, path: '/companies', auth: true },
     { text: 'Referrals', icon: <ReferralIcon />, path: '/referrals', auth: true },
+    { text: 'Messages', icon: <ChatIcon />, path: '/messages', auth: true },
+    { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics', auth: true },
     { text: 'Profile', icon: <PersonIcon />, path: '/profile', auth: true }
   ];
   

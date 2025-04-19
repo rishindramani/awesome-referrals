@@ -1,3 +1,5 @@
+import { apiService } from '../../services/apiService';
+import { setAlert } from './uiActions';
 import {
   REFERRALS_LOADING,
   REFERRALS_SUCCESS,
@@ -13,29 +15,28 @@ import {
   REFERRAL_UPDATE_ERROR,
   REFERRAL_NOTE_ADD_SUCCESS
 } from './actionTypes';
-import { setAlert } from './uiActions';
-import api from '../../services/apiService';
 
 // Get all referrals for the current user
-export const getReferrals = () => async (dispatch) => {
+export const getReferrals = (params) => async (dispatch) => {
   try {
     dispatch({ type: REFERRALS_LOADING });
     
-    const res = await api.get('/referrals');
+    const response = await apiService.referrals.getAll(params);
     
     dispatch({
       type: REFERRALS_SUCCESS,
-      payload: res.data
-    });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to fetch referrals';
-        
-    dispatch({
-      type: REFERRALS_ERROR,
-      payload: errorMessage
+      payload: response.data
     });
     
-    dispatch(setAlert(errorMessage, 'error'));
+    return response.data;
+  } catch (error) {
+    dispatch({
+      type: REFERRALS_ERROR,
+      payload: error.response?.data?.message || 'Failed to fetch referrals'
+    });
+    
+    dispatch(setAlert('Failed to fetch referrals', 'error'));
+    return null;
   }
 };
 
@@ -44,21 +45,22 @@ export const getReferralById = (id) => async (dispatch) => {
   try {
     dispatch({ type: REFERRAL_DETAIL_LOADING });
     
-    const res = await api.get(`/referrals/${id}`);
+    const response = await apiService.referrals.getById(id);
     
     dispatch({
       type: REFERRAL_DETAIL_SUCCESS,
-      payload: res.data
-    });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to fetch referral details';
-        
-    dispatch({
-      type: REFERRAL_DETAIL_ERROR,
-      payload: errorMessage
+      payload: response.data
     });
     
-    dispatch(setAlert(errorMessage, 'error'));
+    return response.data;
+  } catch (error) {
+    dispatch({
+      type: REFERRAL_DETAIL_ERROR,
+      payload: error.response?.data?.message || 'Failed to fetch referral details'
+    });
+    
+    dispatch(setAlert('Failed to fetch referral details', 'error'));
+    return null;
   }
 };
 
@@ -67,11 +69,11 @@ export const createReferralRequest = (referralData, navigate) => async (dispatch
   try {
     dispatch({ type: REFERRAL_CREATE_LOADING });
     
-    const res = await api.post('/referrals', referralData);
+    const response = await apiService.referrals.create(referralData);
     
     dispatch({
       type: REFERRAL_CREATE_SUCCESS,
-      payload: res.data
+      payload: response.data
     });
     
     dispatch(setAlert('Referral request sent successfully', 'success'));
@@ -80,15 +82,16 @@ export const createReferralRequest = (referralData, navigate) => async (dispatch
     if (navigate) {
       navigate('/referrals');
     }
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to create referral request';
-        
+    
+    return response.data;
+  } catch (error) {
     dispatch({
       type: REFERRAL_CREATE_ERROR,
-      payload: errorMessage
+      payload: error.response?.data?.message || 'Failed to create referral request'
     });
     
-    dispatch(setAlert(errorMessage, 'error'));
+    dispatch(setAlert(error.response?.data?.message || 'Failed to create referral request', 'error'));
+    return null;
   }
 };
 
@@ -97,11 +100,11 @@ export const updateReferralStatus = (id, status) => async (dispatch) => {
   try {
     dispatch({ type: REFERRAL_UPDATE_LOADING });
     
-    const res = await api.put(`/referrals/${id}/status`, { status });
+    const response = await apiService.referrals.update(id, { status });
     
     dispatch({
       type: REFERRAL_UPDATE_SUCCESS,
-      payload: res.data
+      payload: response.data
     });
     
     let message = '';
@@ -120,36 +123,37 @@ export const updateReferralStatus = (id, status) => async (dispatch) => {
     }
     
     dispatch(setAlert(message, 'success'));
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to update referral status';
-        
+    return response.data;
+  } catch (error) {
     dispatch({
       type: REFERRAL_UPDATE_ERROR,
-      payload: errorMessage
+      payload: error.response?.data?.message || 'Failed to update referral status'
     });
     
-    dispatch(setAlert(errorMessage, 'error'));
+    dispatch(setAlert(error.response?.data?.message || 'Failed to update referral status', 'error'));
+    return null;
   }
 };
 
 // Add note to referral
 export const addReferralNote = (id, note) => async (dispatch) => {
   try {
-    const res = await api.post(`/referrals/${id}/notes`, { note });
+    const response = await apiService.referrals.addReferralNote(id, note);
     
     dispatch({
       type: REFERRAL_NOTE_ADD_SUCCESS,
-      payload: res.data
+      payload: response.data
     });
     
     dispatch(setAlert('Note added to referral', 'success'));
     
     // Refresh referral details
     dispatch(getReferralById(id));
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to add note to referral';
     
-    dispatch(setAlert(errorMessage, 'error'));
+    return response.data;
+  } catch (error) {
+    dispatch(setAlert(error.response?.data?.message || 'Failed to add note to referral', 'error'));
+    return null;
   }
 };
 
@@ -160,21 +164,16 @@ export const uploadReferralAttachment = (id, file) => async (dispatch) => {
     const formData = new FormData();
     formData.append('file', file);
     
-    const config = {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    };
-    
-    await api.post(`/referrals/${id}/attachments`, formData, config);
+    const response = await apiService.referrals.uploadAttachment(id, formData);
     
     dispatch(setAlert('File uploaded successfully', 'success'));
     
     // Refresh referral details
     dispatch(getReferralById(id));
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to upload attachment';
     
-    dispatch(setAlert(errorMessage, 'error'));
+    return response.data;
+  } catch (error) {
+    dispatch(setAlert(error.response?.data?.message || 'Failed to upload attachment', 'error'));
+    return null;
   }
 }; 

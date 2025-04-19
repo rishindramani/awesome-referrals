@@ -19,7 +19,11 @@ import ReferralRequests from './pages/ReferralRequests';
 import Companies from './pages/Companies';
 import CompanyDetail from './pages/CompanyDetail';
 import Conversations from './pages/Conversations';
+import ChatPage from './pages/ChatPage';
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import NotFound from './pages/NotFound';
+import CreateReferralRequest from './pages/CreateReferralRequest';
+import LinkedInCallback from './pages/LinkedInCallback';
 
 // Helper component to preserve query parameters when redirecting
 const RedirectWithState = ({ to }) => {
@@ -93,6 +97,9 @@ const App = () => {
         {/* Moved NotFound route outside MainLayout */}
         <Route path="*" element={<NotFound />} />
         
+        {/* LinkedIn callback route - outside of MainLayout */}
+        <Route path="/auth/linkedin/callback" element={<LinkedInCallback />} />
+        
         {/* Public routes inside MainLayout */}
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Home />} />
@@ -114,7 +121,10 @@ const App = () => {
             <Route path="companies/:id" element={<CompanyDetail />} />
             <Route path="profile" element={<Profile />} />
             <Route path="referrals" element={<ReferralRequests />} />
-            <Route path="messages" element={<Conversations />} />
+            <Route path="referrals/new/:jobId/:referrerId" element={<CreateReferralRequest />} />
+            <Route path="messages" element={<ChatPage />} />
+            <Route path="messages/:conversationId" element={<ChatPage />} />
+            <Route path="analytics" element={<AnalyticsDashboard />} />
           </Route>
           
           {/* Note: '*' route is now handled outside this MainLayout block */}

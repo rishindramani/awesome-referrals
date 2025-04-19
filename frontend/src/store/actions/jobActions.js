@@ -1,255 +1,174 @@
+import { apiService } from '../../services/apiService';
+import { setAlert } from './uiActions';
 import {
   JOBS_LOADING,
   JOBS_SUCCESS,
   JOBS_ERROR,
-  JOB_DETAIL_LOADING,
-  JOB_DETAIL_SUCCESS,
-  JOB_DETAIL_ERROR,
-  JOB_CREATE_LOADING,
-  JOB_CREATE_SUCCESS,
-  JOB_CREATE_ERROR,
-  JOB_UPDATE_LOADING,
-  JOB_UPDATE_SUCCESS,
-  JOB_UPDATE_ERROR,
-  JOB_DELETE_SUCCESS,
-  JOB_DELETE_ERROR,
-  JOB_SEARCH_SUCCESS,
-  JOB_SEARCH_ERROR,
+  JOB_LOADING,
+  JOB_SUCCESS,
+  JOB_ERROR,
   SAVED_JOBS_LOADING,
   SAVED_JOBS_SUCCESS,
   SAVED_JOBS_ERROR,
-  TOP_JOBS_SUCCESS,
-  SAVE_JOB_SUCCESS,
-  SET_ALERT
+  JOB_SAVED_SUCCESS,
+  JOB_UNSAVED_SUCCESS,
+  TRENDING_JOBS_LOADING,
+  TRENDING_JOBS_SUCCESS,
+  TRENDING_JOBS_ERROR
 } from './actionTypes';
-import { setAlert } from './uiActions';
-import apiService from '../../services/apiService';
 
-// Get all jobs
-export const getJobs = (page = 1, limit = 10) => async (dispatch) => {
+// Get all jobs with pagination and filtering
+export const getJobs = (params) => async (dispatch) => {
   try {
     dispatch({ type: JOBS_LOADING });
     
-    const res = await apiService.jobs.getAll({ page, limit });
+    const response = await apiService.jobs.getAll(params);
     
     dispatch({
       type: JOBS_SUCCESS,
-      payload: res.data
+      payload: response.data
     });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to fetch jobs';
     
+    return response.data;
+  } catch (error) {
     dispatch({
       type: JOBS_ERROR,
-      payload: errorMessage
+      payload: error.response?.data?.message || 'Failed to fetch jobs'
     });
     
-    dispatch(setAlert(errorMessage, 'error'));
+    dispatch(setAlert('Failed to fetch jobs', 'error'));
+    return null;
   }
 };
 
-// Get job details by ID
+// Get a specific job by ID
 export const getJobById = (id) => async (dispatch) => {
   try {
-    dispatch({ type: JOB_DETAIL_LOADING });
+    dispatch({ type: JOB_LOADING });
     
-    const res = await apiService.jobs.getById(id);
-    
-    dispatch({
-      type: JOB_DETAIL_SUCCESS,
-      payload: res.data
-    });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to fetch job details';
+    const response = await apiService.jobs.getById(id);
     
     dispatch({
-      type: JOB_DETAIL_ERROR,
-      payload: errorMessage
+      type: JOB_SUCCESS,
+      payload: response.data.data.job
     });
     
-    dispatch(setAlert(errorMessage, 'error'));
+    return response.data.data.job;
+  } catch (error) {
+    dispatch({
+      type: JOB_ERROR,
+      payload: error.response?.data?.message || 'Failed to fetch job details'
+    });
+    
+    dispatch(setAlert('Failed to fetch job details', 'error'));
+    return null;
   }
 };
 
-// Create a new job (requires authentication)
-export const createJob = (jobData, navigate) => async (dispatch) => {
-  try {
-    dispatch({ type: JOB_CREATE_LOADING });
-    
-    const res = await apiService.jobs.create(jobData);
-    
-    dispatch({
-      type: JOB_CREATE_SUCCESS,
-      payload: res.data
-    });
-    
-    dispatch(setAlert('Job created successfully', 'success'));
-    
-    // Navigate to job details
-    if (navigate) {
-      navigate(`/jobs/${res.data.id}`);
-    }
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to create job';
-    
-    dispatch({
-      type: JOB_CREATE_ERROR,
-      payload: errorMessage
-    });
-    
-    dispatch(setAlert(errorMessage, 'error'));
-  }
-};
-
-// Update a job (requires authentication)
-export const updateJob = (id, jobData, navigate) => async (dispatch) => {
-  try {
-    dispatch({ type: JOB_UPDATE_LOADING });
-    
-    const res = await apiService.jobs.update(id, jobData);
-    
-    dispatch({
-      type: JOB_UPDATE_SUCCESS,
-      payload: res.data
-    });
-    
-    dispatch(setAlert('Job updated successfully', 'success'));
-    
-    // Navigate to job details
-    if (navigate) {
-      navigate(`/jobs/${id}`);
-    }
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to update job';
-    
-    dispatch({
-      type: JOB_UPDATE_ERROR,
-      payload: errorMessage
-    });
-    
-    dispatch(setAlert(errorMessage, 'error'));
-  }
-};
-
-// Delete a job (requires authentication)
-export const deleteJob = (id, navigate) => async (dispatch) => {
-  try {
-    await apiService.jobs.delete(id);
-    
-    dispatch({
-      type: JOB_DELETE_SUCCESS,
-      payload: id
-    });
-    
-    dispatch(setAlert('Job deleted successfully', 'success'));
-    
-    // Navigate to jobs list
-    if (navigate) {
-      navigate('/jobs');
-    }
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to delete job';
-    
-    dispatch({
-      type: JOB_DELETE_ERROR,
-      payload: errorMessage
-    });
-    
-    dispatch(setAlert(errorMessage, 'error'));
-  }
-};
-
-// Search jobs by keyword, location, or other criteria
-export const searchJobs = (searchParams) => async (dispatch) => {
+// Search jobs with multiple filters
+export const searchJobs = (params) => async (dispatch) => {
   try {
     dispatch({ type: JOBS_LOADING });
     
-    const res = await apiService.jobs.search(searchParams);
+    const response = await apiService.jobs.search(params);
     
     dispatch({
-      type: JOB_SEARCH_SUCCESS,
-      payload: res.data
+      type: JOBS_SUCCESS,
+      payload: response.data
     });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to search jobs';
     
+    return response.data;
+  } catch (error) {
     dispatch({
-      type: JOB_SEARCH_ERROR,
-      payload: errorMessage
+      type: JOBS_ERROR,
+      payload: error.response?.data?.message || 'Failed to search jobs'
     });
     
-    dispatch(setAlert(errorMessage, 'error'));
+    dispatch(setAlert('Failed to search jobs', 'error'));
+    return null;
   }
 };
 
-// Get saved jobs for the current user
-export const getSavedJobs = () => async (dispatch) => {
+// Get jobs saved by the user
+export const getSavedJobs = (params) => async (dispatch) => {
   try {
     dispatch({ type: SAVED_JOBS_LOADING });
     
-    const res = await apiService.jobs.getSaved();
+    const response = await apiService.jobs.getSaved(params);
     
     dispatch({
       type: SAVED_JOBS_SUCCESS,
-      payload: res.data
+      payload: response.data
     });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to fetch saved jobs';
     
+    return response.data;
+  } catch (error) {
     dispatch({
       type: SAVED_JOBS_ERROR,
-      payload: errorMessage
+      payload: error.response?.data?.message || 'Failed to fetch saved jobs'
     });
     
-    dispatch(setAlert(errorMessage, 'error'));
+    dispatch(setAlert('Failed to fetch saved jobs', 'error'));
+    return null;
   }
 };
 
-// Save a job for the current user
+// Save a job for later
 export const saveJob = (jobId) => async (dispatch) => {
   try {
-    await apiService.jobs.saveJob(jobId);
+    const response = await apiService.jobs.saveJob(jobId);
     
     dispatch({
-      type: SAVE_JOB_SUCCESS,
-      payload: jobId
+      type: JOB_SAVED_SUCCESS,
+      payload: { jobId, message: response.data.message }
     });
     
     dispatch(setAlert('Job saved successfully', 'success'));
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to save job';
-    dispatch(setAlert(errorMessage, 'error'));
+    return response.data;
+  } catch (error) {
+    dispatch(setAlert(error.response?.data?.message || 'Failed to save job', 'error'));
+    return null;
   }
 };
 
-// Unsave (remove) a job for the current user
+// Unsave/remove a job from saved list
 export const unsaveJob = (jobId) => async (dispatch) => {
   try {
-    await apiService.jobs.unsaveJob(jobId);
+    const response = await apiService.jobs.unsaveJob(jobId);
     
     dispatch({
-      type: 'UNSAVE_JOB_SUCCESS',
-      payload: jobId
+      type: JOB_UNSAVED_SUCCESS,
+      payload: { jobId, message: response.data.message }
     });
     
     dispatch(setAlert('Job removed from saved list', 'success'));
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to remove saved job';
-    dispatch(setAlert(errorMessage, 'error'));
+    return response.data;
+  } catch (error) {
+    dispatch(setAlert(error.response?.data?.message || 'Failed to remove job from saved list', 'error'));
+    return null;
   }
 };
 
-// Get top/featured jobs
-export const getTopJobs = (limit) => async (dispatch) => {
+// Get trending/top jobs
+export const getTrendingJobs = () => async (dispatch) => {
   try {
-    const res = await apiService.jobs.getTopJobs();
+    dispatch({ type: TRENDING_JOBS_LOADING });
+    
+    const response = await apiService.jobs.getTopJobs();
     
     dispatch({
-      type: TOP_JOBS_SUCCESS,
-      payload: res.data
+      type: TRENDING_JOBS_SUCCESS,
+      payload: response.data
     });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to fetch top jobs';
-    dispatch(setAlert(errorMessage, 'error'));
+    
+    return response.data;
+  } catch (error) {
+    dispatch({
+      type: TRENDING_JOBS_ERROR,
+      payload: error.response?.data?.message || 'Failed to fetch trending jobs'
+    });
+    
+    dispatch(setAlert('Failed to fetch trending jobs', 'error'));
+    return null;
   }
 }; 

@@ -36,7 +36,7 @@ api.interceptors.response.use(
 );
 
 // API service methods
-const apiService = {
+export const apiService = {
   // Auth endpoints
   auth: {
     login: (credentials) => {
@@ -74,6 +74,19 @@ const apiService = {
     getProfileByUsername: (username) => api.get(`/users/profile/${username}`)
   },
   
+  // Profile endpoints
+  profiles: {
+    getCurrentProfile: () => api.get('/profiles/me'),
+    getProfileByUserId: (userId) => api.get(`/profiles/user/${userId}`),
+    updateProfile: (profileData) => api.put('/profiles', profileData),
+    addExperience: (experienceData) => api.post('/profiles/experience', experienceData),
+    deleteExperience: (experienceId) => api.delete(`/profiles/experience/${experienceId}`),
+    addEducation: (educationData) => api.post('/profiles/education', educationData),
+    deleteEducation: (educationId) => api.delete(`/profiles/education/${educationId}`),
+    addSkill: (skillData) => api.post('/profiles/skills', skillData),
+    deleteSkill: (skillId) => api.delete(`/profiles/skills/${skillId}`)
+  },
+  
   // Job endpoints
   jobs: {
     getAll: (params) => api.get('/jobs', { params }),
@@ -104,25 +117,38 @@ const apiService = {
     approveRequest: (id) => api.put(`/referrals/requests/${id}/approve`),
     rejectRequest: (id) => api.put(`/referrals/requests/${id}/reject`),
     getRequestsByJob: (jobId) => api.get(`/referrals/jobs/${jobId}`),
-    addReferralNote: (id, note) => api.post(`/referrals/${id}/notes`, { note })
+    addReferralNote: (id, note) => api.post(`/referrals/${id}/notes`, { note }),
+    uploadAttachment: (id, formData) => api.post(`/referrals/${id}/attachments`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
   },
   
   // Notification endpoints
   notifications: {
     getAll: () => api.get('/notifications'),
     markAsRead: (id) => api.put(`/notifications/${id}/read`),
-    markAllAsRead: () => api.put('/notifications/read-all')
+    markAllAsRead: () => api.put('/notifications/read-all'),
+    delete: (id) => api.delete(`/notifications/${id}`)
   },
   
-  // Messaging endpoints
-  messages: {
-    getConversations: () => api.get('/conversations'),
-    getConversation: (id) => api.get(`/conversations/${id}`),
-    getMessages: (conversationId) => api.get(`/conversations/${conversationId}/messages`),
-    sendMessage: (conversationId, content) => api.post(`/conversations/${conversationId}/messages`, { content }),
-    markAsRead: (messageId) => api.put(`/messages/${messageId}/read`),
-    startConversation: (userId) => api.post('/conversations', { recipient_id: userId })
-  }
+  // Stats endpoints
+  getStats: (endpoint) => api.get(endpoint),
+  getUserStats: (period = 'all') => api.get(`/stats/user?period=${period}`),
+  getReferralStats: (period = 'all') => api.get(`/stats/referrals?period=${period}`),
+  getJobStats: (period = 'all') => api.get(`/stats/jobs?period=${period}`),
+  getPlatformStats: () => api.get('/stats/platform'),
+  getDashboardStats: (period = 'all') => api.get(`/stats/dashboard?period=${period}`),
+  
+  // Messaging endpoints - Direct methods rather than nested object
+  getConversations: () => api.get('/conversations'),
+  getOrCreateConversation: (userId) => api.post('/conversations', { recipient_id: userId }),
+  getMessages: (conversationId, page = 1, limit = 20) => 
+    api.get(`/conversations/${conversationId}/messages`, { params: { page, limit } }),
+  sendMessage: (conversationId, messageData) => 
+    api.post(`/conversations/${conversationId}/messages`, messageData),
+  markMessagesAsRead: (conversationId) => 
+    api.put(`/conversations/${conversationId}/read`)
 };
 
+// For backward compatibility
 export default apiService; 

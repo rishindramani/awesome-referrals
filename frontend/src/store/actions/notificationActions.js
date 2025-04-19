@@ -7,64 +7,85 @@ import {
   DELETE_NOTIFICATION_SUCCESS
 } from './actionTypes';
 import { setAlert } from './uiActions';
-import api from '../../services/apiService';
+import { apiService } from '../../services/apiService';
 
 // Fetch user notifications
 export const fetchNotifications = () => async (dispatch) => {
   try {
     dispatch({ type: FETCH_NOTIFICATIONS_LOADING });
     
-    const res = await api.get('/notifications');
+    const response = await apiService.notifications.getAll();
     
     dispatch({
       type: FETCH_NOTIFICATIONS_SUCCESS,
-      payload: res.data
+      payload: response.data
     });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to fetch notifications';
-    dispatch({ type: FETCH_NOTIFICATIONS_ERROR, payload: errorMessage });
+    
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to fetch notifications';
+    
+    dispatch({ 
+      type: FETCH_NOTIFICATIONS_ERROR, 
+      payload: errorMessage 
+    });
+    
+    dispatch(setAlert(errorMessage, 'error'));
+    return null;
   }
 };
 
 // Mark a notification as read
 export const markNotificationRead = (notificationId) => async (dispatch) => {
   try {
-    await api.put(`/notifications/${notificationId}/read`, {});
+    const response = await apiService.notifications.markAsRead(notificationId);
     
     dispatch({
       type: MARK_NOTIFICATION_READ,
       payload: notificationId
     });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to mark notification as read';
+    
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to mark notification as read';
+    
     dispatch(setAlert(errorMessage, 'error'));
+    return null;
   }
 };
 
 // Mark all notifications as read
 export const markAllNotificationsRead = () => async (dispatch) => {
   try {
-    await api.put('/notifications/read-all', {});
+    const response = await apiService.notifications.markAllAsRead();
     
     dispatch({ type: MARK_ALL_NOTIFICATIONS_READ });
     dispatch(setAlert('All notifications marked as read', 'success'));
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to mark all notifications as read';
+    
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to mark all notifications as read';
+    
     dispatch(setAlert(errorMessage, 'error'));
+    return null;
   }
 };
 
 // Delete a notification
 export const deleteNotification = (notificationId) => async (dispatch) => {
   try {
-    await api.delete(`/notifications/${notificationId}`);
+    await apiService.notifications.delete(notificationId);
     
     dispatch({
       type: DELETE_NOTIFICATION_SUCCESS,
       payload: notificationId
     });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to delete notification';
+    
+    return { success: true };
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to delete notification';
+    
     dispatch(setAlert(errorMessage, 'error'));
+    return null;
   }
 }; 

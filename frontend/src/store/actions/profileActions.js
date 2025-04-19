@@ -18,21 +18,23 @@ import {
   SKILL_DELETE_ERROR
 } from './actionTypes';
 import { setAlert } from './uiActions';
-import api from '../../services/apiService';
+import { apiService } from '../../services/apiService';
 
 // Get current user profile
 export const getCurrentProfile = () => async (dispatch) => {
   try {
     dispatch({ type: PROFILE_LOADING });
 
-    const res = await api.get('/profiles/me');
+    const response = await apiService.profiles.getCurrentProfile();
 
     dispatch({
       type: PROFILE_SUCCESS,
-      payload: res.data
+      payload: response.data
     });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to fetch profile';
+    
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to fetch profile';
     
     dispatch({
       type: PROFILE_ERROR,
@@ -40,6 +42,7 @@ export const getCurrentProfile = () => async (dispatch) => {
     });
     
     dispatch(setAlert(errorMessage, 'error'));
+    return null;
   }
 };
 
@@ -48,14 +51,16 @@ export const getProfileByUserId = (userId) => async (dispatch) => {
   try {
     dispatch({ type: PROFILE_LOADING });
 
-    const res = await api.get(`/profiles/user/${userId}`);
+    const response = await apiService.profiles.getProfileByUserId(userId);
 
     dispatch({
       type: PROFILE_SUCCESS,
-      payload: res.data
+      payload: response.data
     });
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to fetch profile';
+    
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to fetch profile';
     
     dispatch({
       type: PROFILE_ERROR,
@@ -63,17 +68,18 @@ export const getProfileByUserId = (userId) => async (dispatch) => {
     });
     
     dispatch(setAlert(errorMessage, 'error'));
+    return null;
   }
 };
 
 // Create or update user profile
 export const updateProfile = (profileData, navigate) => async (dispatch) => {
   try {
-    const res = await api.put('/profiles', profileData);
+    const response = await apiService.profiles.updateProfile(profileData);
 
     dispatch({
       type: PROFILE_UPDATE_SUCCESS,
-      payload: res.data
+      payload: response.data
     });
 
     dispatch(setAlert('Profile updated successfully', 'success'));
@@ -81,8 +87,10 @@ export const updateProfile = (profileData, navigate) => async (dispatch) => {
     if (navigate) {
       navigate('/dashboard');
     }
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to update profile';
+    
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to update profile';
     
     dispatch({
       type: PROFILE_UPDATE_ERROR,
@@ -90,17 +98,18 @@ export const updateProfile = (profileData, navigate) => async (dispatch) => {
     });
     
     dispatch(setAlert(errorMessage, 'error'));
+    return null;
   }
 };
 
 // Add profile experience
 export const addExperience = (experienceData, navigate) => async (dispatch) => {
   try {
-    const res = await api.post('/profiles/experience', experienceData);
+    const response = await apiService.profiles.addExperience(experienceData);
 
     dispatch({
       type: EXPERIENCE_ADD_SUCCESS,
-      payload: res.data
+      payload: response.data
     });
 
     dispatch(setAlert('Experience added successfully', 'success'));
@@ -108,8 +117,10 @@ export const addExperience = (experienceData, navigate) => async (dispatch) => {
     if (navigate) {
       navigate('/dashboard');
     }
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to add experience';
+    
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to add experience';
     
     dispatch({
       type: EXPERIENCE_ADD_ERROR,
@@ -117,13 +128,14 @@ export const addExperience = (experienceData, navigate) => async (dispatch) => {
     });
     
     dispatch(setAlert(errorMessage, 'error'));
+    return null;
   }
 };
 
 // Delete profile experience
 export const deleteExperience = (experienceId) => async (dispatch) => {
   try {
-    await api.delete(`/profiles/experience/${experienceId}`);
+    await apiService.profiles.deleteExperience(experienceId);
 
     dispatch({
       type: EXPERIENCE_DELETE_SUCCESS,
@@ -131,8 +143,10 @@ export const deleteExperience = (experienceId) => async (dispatch) => {
     });
 
     dispatch(setAlert('Experience removed successfully', 'success'));
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to delete experience';
+    
+    return { success: true };
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to delete experience';
     
     dispatch({
       type: EXPERIENCE_DELETE_ERROR,
@@ -140,17 +154,18 @@ export const deleteExperience = (experienceId) => async (dispatch) => {
     });
     
     dispatch(setAlert(errorMessage, 'error'));
+    return null;
   }
 };
 
 // Add profile education
 export const addEducation = (educationData, navigate) => async (dispatch) => {
   try {
-    const res = await api.post('/profiles/education', educationData);
+    const response = await apiService.profiles.addEducation(educationData);
 
     dispatch({
       type: EDUCATION_ADD_SUCCESS,
-      payload: res.data
+      payload: response.data
     });
 
     dispatch(setAlert('Education added successfully', 'success'));
@@ -158,8 +173,10 @@ export const addEducation = (educationData, navigate) => async (dispatch) => {
     if (navigate) {
       navigate('/dashboard');
     }
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to add education';
+    
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to add education';
     
     dispatch({
       type: EDUCATION_ADD_ERROR,
@@ -167,13 +184,14 @@ export const addEducation = (educationData, navigate) => async (dispatch) => {
     });
     
     dispatch(setAlert(errorMessage, 'error'));
+    return null;
   }
 };
 
 // Delete profile education
 export const deleteEducation = (educationId) => async (dispatch) => {
   try {
-    await api.delete(`/profiles/education/${educationId}`);
+    await apiService.profiles.deleteEducation(educationId);
 
     dispatch({
       type: EDUCATION_DELETE_SUCCESS,
@@ -181,8 +199,10 @@ export const deleteEducation = (educationId) => async (dispatch) => {
     });
 
     dispatch(setAlert('Education removed successfully', 'success'));
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to delete education';
+    
+    return { success: true };
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to delete education';
     
     dispatch({
       type: EDUCATION_DELETE_ERROR,
@@ -190,22 +210,25 @@ export const deleteEducation = (educationId) => async (dispatch) => {
     });
     
     dispatch(setAlert(errorMessage, 'error'));
+    return null;
   }
 };
 
 // Add profile skill
 export const addSkill = (skillData) => async (dispatch) => {
   try {
-    const res = await api.post('/profiles/skills', skillData);
+    const response = await apiService.profiles.addSkill(skillData);
 
     dispatch({
       type: SKILL_ADD_SUCCESS,
-      payload: res.data
+      payload: response.data
     });
 
     dispatch(setAlert('Skill added successfully', 'success'));
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to add skill';
+    
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to add skill';
     
     dispatch({
       type: SKILL_ADD_ERROR,
@@ -213,13 +236,14 @@ export const addSkill = (skillData) => async (dispatch) => {
     });
     
     dispatch(setAlert(errorMessage, 'error'));
+    return null;
   }
 };
 
 // Delete profile skill
 export const deleteSkill = (skillId) => async (dispatch) => {
   try {
-    await api.delete(`/profiles/skills/${skillId}`);
+    await apiService.profiles.deleteSkill(skillId);
 
     dispatch({
       type: SKILL_DELETE_SUCCESS,
@@ -227,8 +251,10 @@ export const deleteSkill = (skillId) => async (dispatch) => {
     });
 
     dispatch(setAlert('Skill removed successfully', 'success'));
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || 'Failed to delete skill';
+    
+    return { success: true };
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to delete skill';
     
     dispatch({
       type: SKILL_DELETE_ERROR,
@@ -236,5 +262,6 @@ export const deleteSkill = (skillId) => async (dispatch) => {
     });
     
     dispatch(setAlert(errorMessage, 'error'));
+    return null;
   }
 }; 

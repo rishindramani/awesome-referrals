@@ -46,6 +46,7 @@ import {
 } from '@mui/icons-material';
 import ProfileForm from '../components/profile/ProfileForm';
 import { useAuth } from '../hooks';
+import { apiService } from '../services/apiService';
 
 // Sample user data
 const userData = {
@@ -370,7 +371,11 @@ const Profile = () => {
                   <ListItemText primary="Notification Settings" />
                 </ListItem>
                 {!user.linkedin_verified && (
-                  <ListItem button sx={{ borderRadius: 1, mb: 1 }}>
+                  <ListItem 
+                    button 
+                    sx={{ borderRadius: 1, mb: 1 }}
+                    onClick={() => apiService.auth.linkedinAuth()}
+                  >
                     <ListItemIcon>
                       <LinkedInIcon />
                     </ListItemIcon>

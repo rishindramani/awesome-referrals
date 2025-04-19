@@ -1,5 +1,5 @@
-const { Job, User, Company, ReferralRequest, Sequelize } = require('../models');
-const { Op } = Sequelize;
+const { Job, User, Company, ReferralRequest } = require('../models');
+const { Sequelize, Op } = require('sequelize');
 
 /**
  * Generate date constraints based on period

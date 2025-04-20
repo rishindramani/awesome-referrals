@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { encryptAuthPayload } from '../utils/encryption';
 
 // Get API URL from environment variables or use default
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
@@ -40,10 +41,14 @@ export const apiService = {
   // Auth endpoints
   auth: {
     login: (credentials) => {
-      return api.post('/auth/login', credentials);
+      // Encrypt sensitive data before sending
+      const encryptedCredentials = encryptAuthPayload(credentials);
+      return api.post('/auth/login', encryptedCredentials);
     },
     register: (userData) => {
-      return api.post('/auth/register', userData);
+      // Encrypt sensitive data before sending
+      const encryptedUserData = encryptAuthPayload(userData);
+      return api.post('/auth/register', encryptedUserData);
     },
     getUser: () => {
       return api.get('/auth/me')
@@ -57,8 +62,20 @@ export const apiService = {
     resetPasswordRequest: (email) => {
       return api.post('/auth/forgotpassword', { email });
     },
-    resetPassword: (data) => api.post('/auth/resetpassword', data),
-    updatePassword: (data) => api.patch('/auth/updatepassword', data),
+    resetPassword: (data) => {
+      // Encrypt password before sending
+      const encryptedData = encryptAuthPayload(data);
+      return api.post('/auth/resetpassword', encryptedData);
+    },
+    updatePassword: (data) => {
+      // Encrypt both old and new passwords
+      const encryptedData = encryptAuthPayload({
+        ...data,
+        oldPassword: data.currentPassword || data.oldPassword,
+        newPassword: data.newPassword || data.password
+      });
+      return api.patch('/auth/updatepassword', encryptedData);
+    },
     verifyEmail: (token) => api.get(`/auth/verify-email/${token}`),
     refreshToken: () => api.post('/auth/refresh-token'),
     linkedinAuth: () => window.location.href = `${API_URL}/auth/linkedin`
@@ -67,7 +84,15 @@ export const apiService = {
   // User endpoints
   users: {
     updateProfile: (data) => api.put('/users/profile', data),
-    updatePassword: (data) => api.patch('/auth/updatepassword', data),
+    updatePassword: (data) => {
+      // Encrypt passwords before sending
+      const encryptedData = encryptAuthPayload({
+        ...data,
+        oldPassword: data.currentPassword || data.oldPassword,
+        newPassword: data.newPassword || data.password
+      });
+      return api.patch('/auth/updatepassword', encryptedData);
+    },
     uploadAvatar: (formData) => api.post('/users/avatar', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),

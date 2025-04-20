@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -10,6 +10,7 @@ import {
 } from '../store/actions/authActions';
 import { setAlert } from '../store/actions/uiActions';
 import apiService from '../services/apiService';
+import React from 'react';
 
 /**
  * Custom hook for authentication operations
@@ -21,6 +22,11 @@ const useAuth = () => {
   const auth = useSelector(state => state.auth);
   const { isAuthenticated, user, loading, error } = auth;
   const [token, setToken] = useState(localStorage.getItem('token'));
+  
+  // Track if we're already fetching user data to prevent duplicate requests
+  const alreadyFetching = useRef(false);
+  // Track if a token has already been processed to prevent redundant calls
+  const processedTokens = useRef(new Set());
   
   /**
    * Login user
@@ -156,21 +162,43 @@ const useAuth = () => {
    * Load user profile
    */
   const loadUser = useCallback(async () => {
-    // If no token, don't attempt to load user
+    // If no token or already loading, don't attempt to load user
     if (!token) {
       dispatch({ type: 'AUTH_FAIL', payload: 'No token found' });
       return;
     }
     
+    // Skip if currently loading from Redux state
+    if (loading) return;
+    
+    // Skip if already fetching this request
+    if (alreadyFetching.current) return;
+    
+    // Skip if we've already processed this token recently
+    if (processedTokens.current.has(token)) return;
+    
+    // Mark as fetching
+    alreadyFetching.current = true;
+    
     try {
       dispatch({ type: 'AUTH_START' });
       
+      // Set a more reasonable timeout (10 seconds)
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timeout')), 5000);
+        setTimeout(() => reject(new Error('Request timeout')), 10000);
       });
       
       const userPromise = apiService.auth.getUser();
       const response = await Promise.race([userPromise, timeoutPromise]);
+      
+      // Add this token to processed set 
+      processedTokens.current.add(token);
+      
+      // Limit the set to last 5 tokens to prevent memory growth
+      if (processedTokens.current.size > 5) {
+        const oldestToken = Array.from(processedTokens.current)[0];
+        processedTokens.current.delete(oldestToken);
+      }
       
       if (response && response.data && response.data.user) {
         dispatch({
@@ -186,6 +214,8 @@ const useAuth = () => {
         dispatch({ type: 'AUTH_FAIL', payload: 'Invalid user data format' });
       }
     } catch (err) {
+      console.error('Load user error:', err.message);
+      
       if (err.message === 'Network Error' || !err.response) {
         dispatch(setAlert('Connection to server failed. Please try again later.', 'error'));
       }
@@ -193,11 +223,15 @@ const useAuth = () => {
       if (err.response?.status === 401 || err.message === 'Request timeout') {
         localStorage.removeItem('token');
         setToken(null);
+        processedTokens.current.clear();
       }
       
       dispatch({ type: 'AUTH_FAIL', payload: err.message });
+    } finally {
+      // Reset fetching flag when done
+      alreadyFetching.current = false;
     }
-  }, [token, dispatch]);
+  }, [token, dispatch, loading]);
   
   /**
    * Update user profile

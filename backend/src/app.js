@@ -26,6 +26,19 @@ const externalJobRoutes = require('./routes/externalJob.routes');
 // Create Express app
 const app = express();
 
+// Enable CORS - must be before other middleware
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:3001', 'http://127.0.0.1:3001'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+}));
+
+// Handle preflight requests
+app.options('*', cors());
+
 // Set security HTTP headers
 app.use(helmet());
 
@@ -36,27 +49,27 @@ if (config.nodeEnv === 'development') {
   app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 }
 
-// Rate limiting
-const limiter = rateLimit({
+// Rate limiting - only apply to auth endpoints that need protection
+const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 500, // increased from 100 to 500
   standardHeaders: true,
   legacyHeaders: false,
   message: 'Too many requests from this IP, please try again after 15 minutes'
 });
-app.use('/api', limiter);
+
+// Apply rate limiting only to auth routes that need protection
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/reset-password', authLimiter);
 
 // Body parser, reading data from body into req.body
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// Enable CORS with specific configuration
-app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:3001', 'http://127.0.0.1:3001'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+// Decrypt sensitive data in request body
+const decryptPayload = require('./middleware/decryptPayload');
+app.use(decryptPayload);
 
 // Compression middleware
 app.use(compression());

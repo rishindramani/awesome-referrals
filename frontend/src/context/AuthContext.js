@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import useAuth from '../hooks/useAuth';
 
@@ -11,6 +11,7 @@ export const useAuthContext = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const dispatch = useDispatch();
   const authState = useSelector(state => state.auth);
+  const [authTimeout, setAuthTimeout] = useState(false);
   
   const {
     loginUser,
@@ -23,8 +24,25 @@ export const AuthProvider = ({ children }) => {
 
   // Load user on mount
   useEffect(() => {
+    // Start a loading timeout
+    const timeoutId = setTimeout(() => {
+      if (authState.loading) {
+        setAuthTimeout(true);
+      }
+    }, 8000); // Show message after 8 seconds of loading
+    
     loadUser();
+    
+    // Clear timeout when component unmounts or when loading completes
+    return () => clearTimeout(timeoutId);
   }, [loadUser]);
+  
+  // Reset timeout flag if loading completes or fails
+  useEffect(() => {
+    if (!authState.loading) {
+      setAuthTimeout(false);
+    }
+  }, [authState.loading]);
 
   // Context value
   const value = {
@@ -36,7 +54,10 @@ export const AuthProvider = ({ children }) => {
     register: registerUser,
     logout: logoutUser,
     requestPasswordReset,
-    resetPassword
+    resetPassword,
+    
+    // Loading timeout flag
+    authTimeout
   };
 
   return (

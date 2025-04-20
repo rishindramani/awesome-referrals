@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Typography, Button, CircularProgress } from '@mui/material';
 
 // Components
 import MainLayout from './components/layouts/MainLayout';
@@ -32,35 +32,23 @@ const RedirectWithState = ({ to }) => {
 };
 
 const App = () => {
-  const { isAuthenticated, loading } = useAuthContext();
+  const { isAuthenticated, loading, authTimeout } = useAuthContext();
   const location = useLocation();
-  const [loadingTimer, setLoadingTimer] = useState(0);
-
-  // Add a timer to detect if loading is taking too long
-  useEffect(() => {
-    let timer;
-    if (loading) {
-      timer = setInterval(() => {
-        setLoadingTimer(prev => prev + 1);
-      }, 1000);
-    } else {
-      setLoadingTimer(0);
-    }
-    
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [loading]);
 
   // Function to reset application state
   const handleReset = () => {
     localStorage.removeItem('token');
+    window.location.href = '/login'; // Navigate to login page
+  };
+
+  // Function to retry loading
+  const handleRetry = () => {
     window.location.reload();
   };
 
   if (loading) {
-    // Show reset option if loading takes more than 5 seconds
-    if (loadingTimer > 5) {
+    // Show reset option if loading is taking too long (authTimeout flag is set)
+    if (authTimeout) {
       return (
         <Box 
           display="flex" 
@@ -69,20 +57,31 @@ const App = () => {
           justifyContent="center" 
           minHeight="100vh"
           p={3}
+          textAlign="center"
         >
+          <CircularProgress size={60} thickness={4} sx={{ mb: 2 }} />
           <Typography variant="h5" gutterBottom>
             Loading is taking longer than expected
           </Typography>
-          <Typography variant="body1" color="text.secondary" paragraph>
-            There might be an issue with authentication. Would you like to reset the application?
+          <Typography variant="body1" color="text.secondary" paragraph sx={{ maxWidth: 500, mb: 3 }}>
+            There might be an issue with authentication. You can wait a bit longer, retry, or reset the application to start fresh.
           </Typography>
-          <Button 
-            variant="contained" 
-            color="primary" 
-            onClick={handleReset}
-          >
-            Reset Application
-          </Button>
+          <Box display="flex" gap={2}>
+            <Button 
+              variant="outlined" 
+              color="primary" 
+              onClick={handleRetry}
+            >
+              Retry
+            </Button>
+            <Button 
+              variant="contained" 
+              color="primary" 
+              onClick={handleReset}
+            >
+              Reset Application
+            </Button>
+          </Box>
         </Box>
       );
     }

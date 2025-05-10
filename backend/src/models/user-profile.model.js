@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
+const config = require('../config');
 
 const UserProfile = sequelize.define('UserProfile', {
   id: {
@@ -31,8 +32,22 @@ const UserProfile = sequelize.define('UserProfile', {
     type: DataTypes.FLOAT
   },
   skills: {
-    type: DataTypes.ARRAY(DataTypes.STRING),
-    defaultValue: []
+    type: config.nodeEnv === 'development' ? DataTypes.TEXT : DataTypes.ARRAY(DataTypes.STRING),
+    defaultValue: '[]',
+    get() {
+      const rawValue = this.getDataValue('skills');
+      if (config.nodeEnv === 'development') {
+        return rawValue ? JSON.parse(rawValue) : [];
+      }
+      return rawValue;
+    },
+    set(value) {
+      if (config.nodeEnv === 'development') {
+        this.setDataValue('skills', JSON.stringify(value || []));
+      } else {
+        this.setDataValue('skills', value);
+      }
+    }
   },
   resume_url: {
     type: DataTypes.STRING

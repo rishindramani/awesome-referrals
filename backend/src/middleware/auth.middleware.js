@@ -2,8 +2,9 @@ const jwt = require('jsonwebtoken');
 const { AppError } = require('./errorHandler');
 const config = require('../config');
 const logger = require('../utils/logger');
+const User = require('../models/user.model'); // Import User model
 
-// Mock user for development
+// Mock user for development - keep this for simplicity if backend db isn't fully set up
 const mockUser = {
   id: '1',
   email: 'user@example.com',
@@ -32,22 +33,17 @@ exports.protect = async (req, res, next) => {
       return next(new AppError('You are not logged in. Please log in to get access.', 401));
     }
     
-    // Log token for debugging
-    logger.debug(`Received token: ${token}`);
-    
+    // 2) Verify token
     try {
-      // 2) Verify token
       const decoded = jwt.verify(token, config.jwt.secret);
       logger.debug(`Token verified for user ID: ${decoded.id}`);
       
-      // In development mode, use mock user
-      if (config.nodeEnv === 'development') {
-        req.user = mockUser;
-        return next();
+      // Real user lookup from DB
+      const user = await User.findByPk(decoded.id);
+      if (!user) {
+        return next(new AppError('User not found', 401));
       }
-      
-      // In production, would check if user exists in database
-      // ...
+      req.user = user;
       
     } catch (jwtError) {
       logger.error('JWT verification error:', jwtError);
@@ -57,7 +53,7 @@ exports.protect = async (req, res, next) => {
       if (jwtError.name === 'TokenExpiredError') {
         return next(new AppError('Your token has expired. Please log in again.', 401));
       }
-      return next(jwtError);
+      return next(jwtError); // Pass other JWT errors
     }
     
     // Grant access to protected route

@@ -19,7 +19,7 @@ import {
   LinkedIn as LinkedInIcon,
   PersonAdd as PersonAddIcon
 } from '@mui/icons-material';
-import { useAuth } from '../hooks';
+import { useAuthContext } from '../context/AuthContext';
 
 // Validation schema
 const validationSchema = Yup.object({
@@ -31,10 +31,10 @@ const validationSchema = Yup.object({
 });
 
 const Login = () => {
-  const { loading, loginUser } = useAuth();
+  const { loading, login } = useAuthContext();
 
   const handleSubmit = (values) => {
-    loginUser(values.email, values.password);
+    login({ email: values.email, password: values.password });
   };
 
   return (

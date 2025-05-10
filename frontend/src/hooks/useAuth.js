@@ -39,7 +39,7 @@ const useAuth = () => {
       
       // Dispatch login success action
       dispatch({
-        type: 'LOGIN_SUCCESS',
+        type: 'AUTH_SUCCESS',
         payload: { token, user }
       });
       
@@ -51,7 +51,7 @@ const useAuth = () => {
       
       // Dispatch login failure action
       dispatch({
-        type: 'LOGIN_FAIL',
+        type: 'AUTH_FAIL',
         payload: errorMessage
       });
       
@@ -68,7 +68,16 @@ const useAuth = () => {
    */
   const registerUser = useCallback(async (userData, redirectTo = '/dashboard') => {
     try {
-      const response = await apiService.auth.register(userData);
+      // Transform field names from snake_case to camelCase
+      const transformedData = {
+        firstName: userData.first_name,
+        lastName: userData.last_name,
+        email: userData.email,
+        password: userData.password,
+        userType: userData.user_type
+      };
+      
+      const response = await apiService.auth.register(transformedData);
       const { token, user } = response.data;
       
       // Store token in localStorage
@@ -108,7 +117,7 @@ const useAuth = () => {
     setToken(null);
     
     // Dispatch logout action
-    dispatch({ type: 'LOGOUT' });
+    dispatch({ type: 'AUTH_LOGOUT' });
     dispatch(setAlert('You have been logged out', 'info'));
     if (redirectTo) navigate(redirectTo);
   }, [dispatch, navigate]);
@@ -149,26 +158,44 @@ const useAuth = () => {
   const loadUser = useCallback(async () => {
     // If no token, don't attempt to load user
     if (!token) {
-      dispatch({ type: 'AUTH_ERROR' });
+      dispatch({ type: 'AUTH_FAIL', payload: 'No token found' });
       return;
     }
     
     try {
-      dispatch({ type: 'USER_LOADING' });
-      const response = await apiService.auth.getUser();
+      dispatch({ type: 'AUTH_START' });
       
-      dispatch({
-        type: 'USER_LOADED',
-        payload: response.data
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout')), 5000);
       });
+      
+      const userPromise = apiService.auth.getUser();
+      const response = await Promise.race([userPromise, timeoutPromise]);
+      
+      if (response && response.data && response.data.user) {
+        dispatch({
+          type: 'AUTH_SUCCESS',
+          payload: { token, user: response.data.user }
+        });
+      } else if (response && response.data) {
+        dispatch({
+          type: 'AUTH_SUCCESS',
+          payload: { token, user: response.data }
+        });
+      } else {
+        dispatch({ type: 'AUTH_FAIL', payload: 'Invalid user data format' });
+      }
     } catch (err) {
-      // If error is 401, clear token
-      if (err.response?.status === 401) {
+      if (err.message === 'Network Error' || !err.response) {
+        dispatch(setAlert('Connection to server failed. Please try again later.', 'error'));
+      }
+      
+      if (err.response?.status === 401 || err.message === 'Request timeout') {
         localStorage.removeItem('token');
         setToken(null);
       }
       
-      dispatch({ type: 'AUTH_ERROR' });
+      dispatch({ type: 'AUTH_FAIL', payload: err.message });
     }
   }, [token, dispatch]);
   

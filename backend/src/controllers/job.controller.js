@@ -1,4 +1,4 @@
-const { Job, Company, JobSkill, Skill } = require('../models');
+const { Job, Company, JobSkill, Skill, User, SavedJob } = require('../models');
 const { Op } = require('sequelize');
 const { AppError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
@@ -15,6 +15,7 @@ exports.getJobs = async (req, res, next) => {
       salary_min,
       salary_max,
       skills,
+      remote,
       page = 1,
       limit = 10,
       sort_by = 'created_at',
@@ -46,6 +47,12 @@ exports.getJobs = async (req, res, next) => {
     
     if (salary_max) {
       filters.salary_max = { [Op.lte]: parseFloat(salary_max) };
+    }
+    
+    if (remote === 'true') {
+      filters.is_remote = true;
+    } else if (remote === 'false') {
+      filters.is_remote = false;
     }
     
     // Company filter
@@ -125,6 +132,204 @@ exports.getJobs = async (req, res, next) => {
   }
 };
 
+// Advanced search for jobs
+exports.searchJobs = async (req, res, next) => {
+  try {
+    const {
+      query,
+      location,
+      remote,
+      company_ids,
+      job_types,
+      experience_levels,
+      salary_min,
+      salary_max,
+      skills,
+      posted_within,
+      page = 1,
+      limit = 10,
+      sort_by = 'relevance', // relevance, date, salary
+      sort_dir = 'DESC'
+    } = req.query;
+
+    // Build base filters
+    const filters = {};
+    
+    // Full-text search (search in title, description, responsibilities, requirements)
+    if (query) {
+      filters[Op.or] = [
+        { title: { [Op.iLike]: `%${query}%` } },
+        { description: { [Op.iLike]: `%${query}%` } },
+        { responsibilities: { [Op.iLike]: `%${query}%` } },
+        { requirements: { [Op.iLike]: `%${query}%` } }
+      ];
+    }
+    
+    // Location filter
+    if (location) {
+      filters.location = { [Op.iLike]: `%${location}%` };
+    }
+    
+    // Remote work filter
+    if (remote === 'true') {
+      filters.is_remote = true;
+    } else if (remote === 'false') {
+      filters.is_remote = false;
+    }
+    
+    // Job types filter (can be multiple)
+    if (job_types) {
+      const typesArray = job_types.split(',');
+      filters.job_type = { [Op.in]: typesArray };
+    }
+    
+    // Experience levels filter (can be multiple)
+    if (experience_levels) {
+      const levelsArray = experience_levels.split(',');
+      filters.experience_level = { [Op.in]: levelsArray };
+    }
+    
+    // Salary range filter
+    if (salary_min) {
+      filters.salary_min = { [Op.gte]: parseFloat(salary_min) };
+    }
+    
+    if (salary_max) {
+      filters.salary_max = { [Op.lte]: parseFloat(salary_max) };
+    }
+    
+    // Posted within filter (in days)
+    if (posted_within) {
+      const daysAgo = new Date();
+      daysAgo.setDate(daysAgo.getDate() - parseInt(posted_within));
+      filters.created_at = { [Op.gte]: daysAgo };
+    }
+    
+    // Company filter (can be multiple company IDs)
+    const companyFilter = {};
+    if (company_ids) {
+      const idsArray = company_ids.split(',').map(id => parseInt(id, 10));
+      companyFilter.id = { [Op.in]: idsArray };
+    }
+    
+    // Parse skills if provided
+    const skillsArray = skills ? skills.split(',').map(s => s.trim()) : [];
+    
+    // Calculate offset for pagination
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Define sorting
+    let order;
+    switch(sort_by) {
+      case 'date':
+        order = [['created_at', sort_dir]];
+        break;
+      case 'salary':
+        order = [['salary_max', sort_dir]];
+        break;
+      case 'relevance':
+      default:
+        // For relevance sorting, prioritize exact matches in title
+        // This is a simplified approach; a real system would use more sophisticated ranking
+        if (query) {
+          order = [
+            [Sequelize.literal(`CASE WHEN title ILIKE '%${query}%' THEN 0 ELSE 1 END`), 'ASC'],
+            ['created_at', 'DESC']
+          ];
+        } else {
+          order = [['created_at', 'DESC']];
+        }
+        break;
+    }
+    
+    // Build query with includes
+    const queryOptions = {
+      where: filters,
+      include: [
+        {
+          model: Company,
+          as: 'company',
+          where: companyFilter,
+          attributes: ['id', 'name', 'logo_url', 'website']
+        }
+      ],
+      offset,
+      limit: parseInt(limit),
+      order,
+      distinct: true
+    };
+    
+    // Add skills filter if provided
+    if (skillsArray.length > 0) {
+      queryOptions.include.push({
+        model: Skill,
+        as: 'skills',
+        attributes: ['id', 'name'],
+        through: { attributes: [] },
+        where: {
+          name: { [Op.in]: skillsArray }
+        }
+      });
+    } else {
+      // Include skills without filtering
+      queryOptions.include.push({
+        model: Skill,
+        as: 'skills',
+        attributes: ['id', 'name'],
+        through: { attributes: [] }
+      });
+    }
+    
+    // Add saved status if user is authenticated
+    if (req.user) {
+      queryOptions.include.push({
+        model: User,
+        as: 'savedByUsers',
+        attributes: ['id'],
+        through: { attributes: [] },
+        where: { id: req.user.id },
+        required: false
+      });
+    }
+    
+    // Execute query
+    const { rows, count } = await Job.findAndCountAll(queryOptions);
+    
+    // Process results to add isSaved flag
+    const processedJobs = rows.map(job => {
+      const jobData = job.toJSON();
+      
+      // Add isSaved flag if user is authenticated
+      if (req.user) {
+        jobData.isSaved = !!jobData.savedByUsers && jobData.savedByUsers.length > 0;
+        delete jobData.savedByUsers; // Remove the savedByUsers array
+      }
+      
+      return jobData;
+    });
+    
+    // Calculate total pages
+    const totalPages = Math.ceil(count / parseInt(limit));
+    
+    res.status(200).json({
+      status: 'success',
+      results: processedJobs.length,
+      pagination: {
+        total: count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total_pages: totalPages
+      },
+      data: {
+        jobs: processedJobs
+      }
+    });
+  } catch (error) {
+    logger.error('Error searching jobs:', error);
+    next(error);
+  }
+};
+
 // Get a single job by ID
 exports.getJob = async (req, res, next) => {
   try {
@@ -150,14 +355,175 @@ exports.getJob = async (req, res, next) => {
       return next(new AppError('Job not found', 404));
     }
     
+    // Check if job is saved by user if authenticated
+    let isSaved = false;
+    if (req.user) {
+      const savedJob = await SavedJob.findOne({
+        where: {
+          user_id: req.user.id,
+          job_id: id
+        }
+      });
+      isSaved = !!savedJob;
+    }
+    
+    // Add isSaved to job data
+    const jobData = job.toJSON();
+    jobData.isSaved = isSaved;
+    
     res.status(200).json({
       status: 'success',
       data: {
-        job
+        job: jobData
       }
     });
   } catch (error) {
     logger.error('Error getting job:', error);
+    next(error);
+  }
+};
+
+// Get saved jobs for current user
+exports.getSavedJobs = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const {
+      page = 1,
+      limit = 10,
+      sort_by = 'created_at',
+      sort_dir = 'DESC'
+    } = req.query;
+    
+    // Calculate offset for pagination
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Define sorting
+    const order = [[sort_by, sort_dir]];
+    
+    // Query saved jobs
+    const { rows, count } = await Job.findAndCountAll({
+      include: [
+        {
+          model: User,
+          as: 'savedByUsers',
+          where: { id: userId },
+          attributes: [],
+          through: { attributes: [] }
+        },
+        {
+          model: Company,
+          as: 'company',
+          attributes: ['id', 'name', 'logo_url', 'website']
+        },
+        {
+          model: Skill,
+          as: 'skills',
+          attributes: ['id', 'name'],
+          through: { attributes: [] }
+        }
+      ],
+      offset,
+      limit: parseInt(limit),
+      order,
+      distinct: true
+    });
+    
+    // Process results to add isSaved flag
+    const processedJobs = rows.map(job => {
+      const jobData = job.toJSON();
+      jobData.isSaved = true; // These are saved jobs by definition
+      return jobData;
+    });
+    
+    // Calculate total pages
+    const totalPages = Math.ceil(count / parseInt(limit));
+    
+    res.status(200).json({
+      status: 'success',
+      results: processedJobs.length,
+      pagination: {
+        total: count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total_pages: totalPages
+      },
+      data: {
+        jobs: processedJobs
+      }
+    });
+  } catch (error) {
+    logger.error('Error getting saved jobs:', error);
+    next(error);
+  }
+};
+
+// Save a job
+exports.saveJob = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    
+    // Check if job exists
+    const job = await Job.findByPk(id);
+    if (!job) {
+      return next(new AppError('Job not found', 404));
+    }
+    
+    // Check if already saved
+    const existingSave = await SavedJob.findOne({
+      where: {
+        user_id: userId,
+        job_id: id
+      }
+    });
+    
+    if (existingSave) {
+      return res.status(200).json({
+        status: 'success',
+        message: 'Job already saved'
+      });
+    }
+    
+    // Save the job
+    await SavedJob.create({
+      user_id: userId,
+      job_id: id
+    });
+    
+    res.status(200).json({
+      status: 'success',
+      message: 'Job saved successfully'
+    });
+  } catch (error) {
+    logger.error('Error saving job:', error);
+    next(error);
+  }
+};
+
+// Unsave a job
+exports.unsaveJob = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    
+    // Remove the saved job record
+    const result = await SavedJob.destroy({
+      where: {
+        user_id: userId,
+        job_id: id
+      }
+    });
+    
+    if (result === 0) {
+      return next(new AppError('Job not found in saved jobs', 404));
+    }
+    
+    res.status(200).json({
+      status: 'success',
+      message: 'Job removed from saved jobs'
+    });
+  } catch (error) {
+    logger.error('Error removing saved job:', error);
     next(error);
   }
 };

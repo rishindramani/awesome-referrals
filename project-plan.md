@@ -73,6 +73,7 @@ Awesome Referrals is a platform connecting job seekers with employees at target 
 
 ### Backend Development
 
+- [x] Real user lookup in auth middleware (backend now fetches user from DB after JWT verification, replacing mock user)
 - [ ] Implement job listing API with search and filters
 - [ ] Create endpoints for referral requests
 - [ ] Develop user profile management

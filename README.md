@@ -15,7 +15,7 @@ A modern job referral platform that connects job seekers with employees at their
 
 - **Frontend**: React.js, Redux, Material-UI
 - **Backend**: Node.js, Express.js
-- **Database**: PostgreSQL
+- **Database**: PostgreSQL (production), SQLite (development)
 - **Cloud**: AWS (EC2, S3, RDS, Lambda, SES, CloudWatch)
 - **DevOps**: Docker, GitHub Actions
 
@@ -24,10 +24,17 @@ A modern job referral platform that connects job seekers with employees at their
 The project has completed Phase 1 (Foundation) and is currently in Phase 2 (Core Functionality). Here's what's been implemented:
 
 ### Backend
-- Express server with configuration
+- Express server with production-ready configuration
 - Database models and relationships
 - Authentication system with JWT
+- **[NEW] Real user lookup in authentication middleware (no more mock user in dev)**
 - User management API endpoints
+- Error handling and logging
+- API rate limiting for security
+- Health check endpoints
+- SQLite for development, PostgreSQL for production
+- Advanced job search API with multiple filters
+- SavedJob functionality to track user's favorite jobs
 
 ### Frontend
 - React application with Redux state management
@@ -36,14 +43,40 @@ The project has completed Phase 1 (Foundation) and is currently in Phase 2 (Core
 - User dashboard with analytics
 - Referral request management
 - User profile management
+- Protected routes for authenticated users
+- Centralized API service for backend communication
+
+### In Progress
+- LinkedIn integration for verification
+- Messaging system between referrers and job seekers
+- Enhanced user profiles
+- Referral tracking and analytics
 
 See the [project plan](./project-plan.md) for detailed information about the roadmap and future milestones.
+
+## 📈 Development Progress Tracking
+
+| Feature                          | Status      | Phase  | Notes                                      |
+|----------------------------------|-------------|--------|-------------------------------------------|
+| Basic Authentication             | ✅ Complete | 1      | Login, registration, and token management |
+| Database Models                  | ✅ Complete | 1      | All core models implemented               |
+| Frontend Pages                   | ✅ Complete | 1      | All basic pages implemented               |
+| API Integration                  | ✅ Complete | 1      | Centralized API service                   |
+| Job Search & Filters             | ✅ Complete | 2      | Advanced search with multiple filters     |
+| Save Jobs Functionality          | ✅ Complete | 2      | Users can save jobs for later             |
+| Referral System                  | 🔄 In Progress | 2   | Basic functionality in place              |
+| Messaging System                 | 🔄 In Progress | 2   | Models created, UI in development        |
+| **Real User Lookup in Auth**     | ✅ Complete | 2      | Backend now fetches user from DB          |
+| LinkedIn Verification            | ⏳ Pending   | 3     | OAuth integration required                |
+| Analytics Dashboard              | ⏳ Pending   | 3     | Data collection in progress               |
+| Admin Features                   | ⏳ Pending   | 3     | Not started                               |
+| Performance Optimizations        | ⏳ Pending   | 4     | Not started                               |
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js v14+ and npm
-- PostgreSQL database
+- PostgreSQL database (for production)
 - Docker and Docker Compose (optional, for containerized setup)
 
 ### Installation
@@ -69,13 +102,7 @@ npm install
    - Create a `.env` file in the backend directory based on `.env.example`
    - Set up your database connection and JWT secret
 
-4. Run the database migrations:
-```bash
-cd backend
-npx sequelize-cli db:migrate
-```
-
-5. Start the development servers:
+4. Start the development servers:
 
 ```bash
 # Start backend server (from backend directory)
@@ -105,6 +132,8 @@ awesome-referrals/
 │   │   ├── components/   # Reusable components
 │   │   ├── pages/        # Page components
 │   │   ├── store/        # Redux store and actions
+│   │   ├── services/     # API and other services
+│   │   ├── hooks/        # Custom React hooks
 │   │   └── App.js        # Main App component
 │   └── package.json      # Frontend dependencies
 │
@@ -117,7 +146,8 @@ awesome-referrals/
 │   │   ├── routes/       # API routes
 │   │   ├── services/     # Business logic
 │   │   ├── utils/        # Utility functions
-│   │   └── app.js        # Express app setup
+│   │   ├── app.js        # Express app setup
+│   │   └── server.js     # Server startup
 │   └── package.json      # Backend dependencies
 │
 ├── docker-compose.yml    # Docker configuration

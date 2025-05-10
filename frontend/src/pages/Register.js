@@ -24,12 +24,12 @@ import {
   VisibilityOff, 
   LinkedIn as LinkedInIcon
 } from '@mui/icons-material';
-import { useAuth } from '../hooks';
+import { useAuthContext } from '../context/AuthContext';
 import { useForm } from '../hooks';
 import { validation } from '../utils';
 
 const Register = () => {
-  const { loading, registerUser } = useAuth();
+  const { loading, register } = useAuthContext();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -58,7 +58,7 @@ const Register = () => {
         password: values.password,
         user_type: values.user_type
       };
-      registerUser(userData);
+      register(userData);
     },
     (values) => validation.validateForm(values, validation.registrationValidation)
   );

@@ -39,9 +39,9 @@ const connectDB = async () => {
     
     // Sync database in development mode
     if (config.nodeEnv === 'development') {
-      // Force sync to recreate all tables
-      await sequelize.sync({ force: true });
-      logger.info('Database synced successfully (tables were recreated)');
+      const shouldDrop = process.env.MIGRATE_DROP === 'true';
+      await sequelize.sync({ force: shouldDrop, alter: !shouldDrop });
+      logger.info(`Database synced successfully (force=${shouldDrop}, alter=${!shouldDrop})`);
     }
     
     return true;

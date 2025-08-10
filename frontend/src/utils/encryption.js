@@ -1,59 +1,65 @@
 import CryptoJS from 'crypto-js';
+import JSEncrypt from 'jsencrypt';
 
-// This salt should ideally be fetched from the server's public endpoint
-// Using a static salt for demonstration purposes only
 const ENCRYPTION_SALT = 'awesome-referrals-public-salt';
+let serverPublicKey = null;
 
-/**
- * Encrypts sensitive data like passwords before sending to the server
- * @param {string} plainText - The plain text to encrypt (like password)
- * @returns {string} - The encrypted string
- */
+export const setServerPublicKey = (key) => {
+  serverPublicKey = key;
+};
+
+export const fetchServerPublicKey = async (baseUrl) => {
+  try {
+    const res = await fetch(`${baseUrl.replace(/\/$/, '')}/config/public-key`);
+    if (res.status === 200) {
+      const key = await res.text();
+      if (key && key.includes('BEGIN PUBLIC KEY')) {
+        serverPublicKey = key;
+      }
+    }
+  } catch (_) {
+    // ignore
+  }
+};
+
 export const encryptSensitiveData = (plainText) => {
   if (!plainText) return '';
-  
-  // Add a unique nonce to prevent identical encryptions
+
+  // Prefer RSA if server public key available
+  if (serverPublicKey) {
+    const enc = new JSEncrypt();
+    enc.setPublicKey(serverPublicKey);
+    const encrypted = enc.encrypt(plainText);
+    if (encrypted) return encrypted;
+  }
+
+  // Fallback to AES with nonce
   const nonce = CryptoJS.lib.WordArray.random(16).toString();
   const dataToEncrypt = `${nonce}:${plainText}`;
-  
   return CryptoJS.AES.encrypt(dataToEncrypt, ENCRYPTION_SALT).toString();
 };
 
-/**
- * Checks if a string is encrypted
- * @param {string} text - Text to check
- * @returns {boolean} - Whether the text is encrypted
- */
 export const isEncrypted = (text) => {
   if (!text || typeof text !== 'string') return false;
-  
-  try {
-    const decrypted = CryptoJS.AES.decrypt(text, ENCRYPTION_SALT).toString(CryptoJS.enc.Utf8);
-    return decrypted.includes(':');
-  } catch (error) {
-    return false;
-  }
+  // Basic heuristic for RSA (base64-like) or AES (base64)
+  const base64Regex = /^[A-Za-z0-9+/=]+$/;
+  return text.length > 20 && base64Regex.test(text);
 };
 
-/**
- * Handles encryption of auth-related payloads (login, register)
- * @param {Object} payload - The payload object
- * @returns {Object} - The payload with sensitive data encrypted
- */
 export const encryptAuthPayload = (payload) => {
   if (!payload) return payload;
-  
   const encryptedPayload = { ...payload };
-  
-  // Encrypt password if present
   if (payload.password && !isEncrypted(payload.password)) {
     encryptedPayload.password = encryptSensitiveData(payload.password);
   }
-  
-  // Encrypt confirm password if present
   if (payload.confirm_password && !isEncrypted(payload.confirm_password)) {
     encryptedPayload.confirm_password = encryptSensitiveData(payload.confirm_password);
   }
-  
+  if (payload.newPassword && !isEncrypted(payload.newPassword)) {
+    encryptedPayload.newPassword = encryptSensitiveData(payload.newPassword);
+  }
+  if (payload.oldPassword && !isEncrypted(payload.oldPassword)) {
+    encryptedPayload.oldPassword = encryptSensitiveData(payload.oldPassword);
+  }
   return encryptedPayload;
 }; 

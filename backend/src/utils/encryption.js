@@ -1,8 +1,26 @@
 const CryptoJS = require('crypto-js');
+const fs = require('fs');
+const path = require('path');
 const logger = require('./logger');
 
 // This should match the salt used on the frontend
 const ENCRYPTION_SALT = 'awesome-referrals-public-salt';
+let publicKey = null;
+let privateKey = null;
+
+// Attempt to load RSA keys from disk if available
+try {
+  const pubPath = process.env.RSA_PUBLIC_KEY_PATH || path.join(__dirname, '../../keys/public.pem');
+  const privPath = process.env.RSA_PRIVATE_KEY_PATH || path.join(__dirname, '../../keys/private.pem');
+  if (fs.existsSync(pubPath)) {
+    publicKey = fs.readFileSync(pubPath, 'utf8');
+  }
+  if (fs.existsSync(privPath)) {
+    privateKey = fs.readFileSync(privPath, 'utf8');
+  }
+} catch (e) {
+  logger.warn('RSA keys not found; falling back to symmetric decryption');
+}
 
 /**
  * Determines if a string is likely to be encrypted
@@ -27,6 +45,7 @@ const decryptData = (encryptedText) => {
     return encryptedText;
   }
   
+  // Future: if data format indicates RSA, decrypt with privateKey. For now, symmetric fallback
   try {
     const decryptedBytes = CryptoJS.AES.decrypt(encryptedText, ENCRYPTION_SALT);
     const decryptedText = decryptedBytes.toString(CryptoJS.enc.Utf8);
@@ -71,8 +90,11 @@ const processRequestBody = (body) => {
   return processedBody;
 };
 
+const getPublicKey = () => publicKey || null;
+
 module.exports = {
   isEncrypted,
   decryptData,
-  processRequestBody
+  processRequestBody,
+  getPublicKey
 }; 

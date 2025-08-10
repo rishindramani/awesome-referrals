@@ -1,9 +1,26 @@
 const express = require('express');
+const router = express.Router();
 const authController = require('../controllers/auth.controller');
 const { protect } = require('../middleware/auth.middleware');
-const config = require('../config');
+const validate = require('../middleware/validate');
+const Joi = require('joi');
 
-const router = express.Router();
+const loginSchema = {
+  body: Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string().min(8).required()
+  })
+};
+
+const registerSchema = {
+  body: Joi.object({
+    firstName: Joi.string().min(1).max(100).required(),
+    lastName: Joi.string().min(1).max(100).required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().min(8).required(),
+    userType: Joi.string().valid('job_seeker', 'referrer').default('job_seeker')
+  })
+};
 
 /**
  * @swagger
@@ -40,7 +57,7 @@ const router = express.Router();
  *       400:
  *         description: Bad request
  */
-router.post('/register', authController.register);
+router.post('/register', validate(registerSchema), authController.register);
 
 /**
  * @swagger
@@ -68,7 +85,7 @@ router.post('/register', authController.register);
  *       401:
  *         description: Unauthorized
  */
-router.post('/login', authController.login);
+router.post('/login', validate(loginSchema), authController.login);
 
 /**
  * @swagger

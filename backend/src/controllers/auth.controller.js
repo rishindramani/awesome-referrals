@@ -54,9 +54,8 @@ const createSendToken = (user, statusCode, res) => {
 // Register a new user
 exports.register = async (req, res, next) => {
   try {
-    logger.info('Registration attempt with data:', JSON.stringify(req.body, null, 2));
-    
     const { email, password, firstName, lastName, userType } = req.body;
+    logger.info(`Registration attempt for email: ${email}`);
     
     // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
@@ -77,16 +76,10 @@ exports.register = async (req, res, next) => {
       
       // Create new user in the database
       logger.info(`Creating new user with email: ${email}`);
-      logger.debug('User data being created:', {
-        email,
-        first_name: firstName,
-        last_name: lastName,
-        user_type: userType || 'job_seeker'
-      });
       
       const newUser = await User.create({
         email,
-        password_hash: hashedPassword, // Set password_hash directly
+        password_hash: hashedPassword,
         first_name: firstName,
         last_name: lastName,
         user_type: userType || 'job_seeker',
@@ -108,8 +101,7 @@ exports.register = async (req, res, next) => {
   } catch (error) {
     logger.error('Registration error details:', {
       message: error.message,
-      stack: error.stack,
-      body: req.body
+      stack: error.stack
     });
     next(error);
   }
@@ -118,9 +110,8 @@ exports.register = async (req, res, next) => {
 // Login user
 exports.login = async (req, res, next) => {
   try {
-    logger.info('Login attempt with data:', JSON.stringify(req.body, null, 2));
-    
     const { email, password } = req.body;
+    logger.info(`Login attempt for email: ${email}`);
     
     // Check if email and password exist
     if (!email || !password) {
@@ -131,7 +122,7 @@ exports.login = async (req, res, next) => {
     // Check if user exists and get password
     const user = await User.findOne({ 
       where: { email },
-      attributes: { include: ['password_hash'] } // Include password hash for verification
+      attributes: { include: ['password_hash'] }
     });
     
     if (!user) {
@@ -152,8 +143,7 @@ exports.login = async (req, res, next) => {
   } catch (error) {
     logger.error('Login error details:', {
       message: error.message,
-      stack: error.stack,
-      body: req.body
+      stack: error.stack
     });
     next(error);
   }

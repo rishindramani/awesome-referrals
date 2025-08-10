@@ -4,6 +4,9 @@ const config = {
   // Server Configuration
   nodeEnv: process.env.NODE_ENV || 'development',
   port: process.env.PORT || 8000,
+  cors: {
+    origins: (process.env.CORS_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000').split(',').map(o => o.trim()),
+  },
   
   // Database Configuration
   database: {

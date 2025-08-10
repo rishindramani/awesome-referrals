@@ -1,8 +1,11 @@
 import axios from 'axios';
-import { encryptAuthPayload } from '../utils/encryption';
+import { encryptAuthPayload, fetchServerPublicKey } from '../utils/encryption';
 
 // Get API URL from environment variables or use default
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+
+// Bootstrap: fetch server public key (non-blocking)
+fetchServerPublicKey(API_URL).catch(() => {});
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -15,9 +18,7 @@ const api = axios.create({
 // Request interceptor to add auth token to requests
 api.interceptors.request.use(
   config => {
-    // Get token from localStorage
     const token = localStorage.getItem('token');
-    // If token exists, add it to headers
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -30,7 +31,6 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   response => response,
   error => {
-    // Log errors for debugging
     console.error('API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }
@@ -41,34 +41,20 @@ export const apiService = {
   // Auth endpoints
   auth: {
     login: (credentials) => {
-      // Encrypt sensitive data before sending
       const encryptedCredentials = encryptAuthPayload(credentials);
       return api.post('/auth/login', encryptedCredentials);
     },
     register: (userData) => {
-      // Encrypt sensitive data before sending
       const encryptedUserData = encryptAuthPayload(userData);
       return api.post('/auth/register', encryptedUserData);
     },
-    getUser: () => {
-      return api.get('/auth/me')
-        .then(response => {
-          return response;
-        })
-        .catch(err => {
-          throw err;
-        });
-    },
-    resetPasswordRequest: (email) => {
-      return api.post('/auth/forgotpassword', { email });
-    },
+    getUser: () => api.get('/auth/me'),
+    resetPasswordRequest: (email) => api.post('/auth/forgotpassword', { email }),
     resetPassword: (data) => {
-      // Encrypt password before sending
       const encryptedData = encryptAuthPayload(data);
       return api.post('/auth/resetpassword', encryptedData);
     },
     updatePassword: (data) => {
-      // Encrypt both old and new passwords
       const encryptedData = encryptAuthPayload({
         ...data,
         oldPassword: data.currentPassword || data.oldPassword,

@@ -32,7 +32,8 @@ exports.getReferralRequests = async (req, res, next) => {
         },
         {
           model: Job,
-          include: [{ model: Company }]
+          as: 'job',
+          include: [{ model: Company, as: 'company' }]
         }
       ],
       offset,
@@ -95,7 +96,8 @@ exports.getReferralRequest = async (req, res, next) => {
         },
         {
           model: Job,
-          include: [{ model: Company }]
+          as: 'job',
+          include: [{ model: Company, as: 'company' }]
         }
       ]
     });
@@ -191,18 +193,19 @@ exports.createReferralRequest = async (req, res, next) => {
         },
         {
           model: Job,
-          include: [{ model: Company }]
+          as: 'job',
+          include: [{ model: Company, as: 'company' }]
         }
       ]
     });
 
     // Send notification to referrer
     try {
-      await NotificationService.sendReferralRequestNotification({
+        await NotificationService.sendReferralRequestNotification({
         referrerId: referrer_id,
         seekerName: `${req.user.first_name} ${req.user.last_name}`,
         jobTitle: job.title,
-        companyName: job.Company ? job.Company.name : 'the company',
+          companyName: job.company ? job.company.name : 'the company',
         referralId: referralRequest.id
       });
     } catch (notificationError) {
@@ -326,8 +329,8 @@ exports.updateReferralRequest = async (req, res, next) => {
           seekerId: referralRequest.seeker_id,
           referrerName: `${referralRequest.referrer.first_name} ${referralRequest.referrer.last_name}`,
           status: req.body.status,
-          jobTitle: referralRequest.Job.title,
-          companyName: referralRequest.Job.Company ? referralRequest.Job.Company.name : 'the company',
+          jobTitle: referralRequest.job.title,
+          companyName: referralRequest.job && referralRequest.job.company ? referralRequest.job.company.name : 'the company',
           referralId: referralRequest.id
         });
       } catch (notificationError) {
@@ -439,9 +442,11 @@ exports.getReferralStats = async (req, res, next) => {
         },
         {
           model: Job,
+          as: 'job',
           attributes: ['id', 'title'],
           include: [{ 
             model: Company,
+            as: 'company',
             attributes: ['id', 'name', 'logo_url']
           }]
         }

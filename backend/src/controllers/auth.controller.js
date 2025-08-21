@@ -157,14 +157,11 @@ exports.getCurrentUser = async (req, res, next) => {
       return next(new AppError('User not found or not authenticated', 401));
     }
     
-    // Return the user object attached by the middleware
-    const user = { ...req.user };
-    // Optionally remove sensitive fields if needed, e.g., password hash if it exists
-    // delete user.password_hash; 
-    
+    // Normalize to plain object
+    const safeUser = req.user && typeof req.user.toJSON === 'function' ? req.user.toJSON() : req.user;
     res.status(200).json({
       status: 'success',
-      user // Send the user object directly
+      user: safeUser
     });
   } catch (error) {
     logger.error('Get current user error:', error);

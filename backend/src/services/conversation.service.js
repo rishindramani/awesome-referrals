@@ -106,15 +106,9 @@ const getUserConversations = async (userId, options) => {
       {
         model: User,
         as: 'participants',
-        where: { id: userId },
-        attributes: [],
-        through: { attributes: [] }
-      },
-      {
-        model: User,
-        as: 'participants',
-        attributes: ['id', 'name', 'email', 'avatar'],
-        through: { attributes: [] }
+        attributes: ['id', 'email', 'first_name', 'last_name', 'profile_picture_url'],
+        through: { attributes: [] },
+        required: true,
       },
       {
         model: Message,
@@ -123,7 +117,7 @@ const getUserConversations = async (userId, options) => {
           {
             model: User,
             as: 'sender',
-            attributes: ['id', 'name', 'avatar']
+            attributes: ['id', 'email', 'first_name', 'last_name', 'profile_picture_url']
           }
         ]
       },
@@ -134,7 +128,8 @@ const getUserConversations = async (userId, options) => {
         through: { attributes: [] }
       }
     ],
-    where: { isActive: true },
+    // Filter membership via nested include reference
+    where: { isActive: true, '$participants.id$': userId },
     order: [['lastActivityAt', 'DESC']],
     limit,
     offset,

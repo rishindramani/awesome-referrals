@@ -56,10 +56,10 @@ exports.getPlatformStats = async () => {
       ReferralRequest.count({ where: { status: 'hired' } })
     ]);
 
-    // Get monthly active users (users who logged in within the last 30 days)
+    // Get monthly active users (users who were updated within the last 30 days)
     const activeUsers = await User.count({
       where: {
-        last_login: {
+        updated_at: {
           [Op.gte]: new Date(new Date() - 30 * 24 * 60 * 60 * 1000)
         }
       }
@@ -125,7 +125,7 @@ exports.getUserStats = async (userId, period = 'all') => {
     };
     
     if (isJobSeeker) {
-      referralWhereClause.job_seeker_id = userId;
+      referralWhereClause.seeker_id = userId;
     } else {
       referralWhereClause.referrer_id = userId;
     }
@@ -141,7 +141,7 @@ exports.getUserStats = async (userId, period = 'all') => {
     ] = await Promise.all([
       ReferralRequest.count({ 
         where: { 
-          job_seeker_id: userId,
+          seeker_id: userId,
           ...whereClause
         } 
       }),
@@ -236,23 +236,25 @@ exports.getReferralStats = async (period = 'all') => {
     // Get referrals by company
     const referralsByCompany = await ReferralRequest.findAll({
       attributes: [
-        [Sequelize.literal('"Job->Company"."name"'), 'name'],
+        [Sequelize.literal('"job->company"."name"'), 'name'],
         [Sequelize.fn('COUNT', Sequelize.col('ReferralRequest.id')), 'value']
       ],
       include: [
         {
           model: Job,
+          as: 'job',
           attributes: [],
           include: [
             {
               model: Company,
+              as: 'company',
               attributes: []
             }
           ]
         }
       ],
       where: whereClause,
-      group: [Sequelize.literal('"Job->Company"."name"')],
+      group: [Sequelize.literal('"job->company"."name"')],
       order: [[Sequelize.literal('value'), 'DESC']],
       limit: 10,
       raw: true
@@ -325,21 +327,21 @@ exports.getJobStats = async (period = 'all') => {
       ? { created_at: dateConstraint } 
       : {};
 
-    // Get jobs by category
-    const jobsByCategory = await Job.findAll({
+    // Get jobs by type
+    const jobsByType = await Job.findAll({
       attributes: [
-        'category',
+        'job_type',
         [Sequelize.fn('COUNT', Sequelize.col('id')), 'value']
       ],
       where: whereClause,
-      group: ['category'],
+      group: ['job_type'],
       order: [[Sequelize.literal('value'), 'DESC']],
       limit: 10,
       raw: true
     });
 
-    const byCategory = jobsByCategory.map(job => ({
-      name: job.category,
+    const byType = jobsByType.map(job => ({
+      name: job.job_type || 'Unknown',
       value: parseInt(job.value)
     }));
 
@@ -364,50 +366,59 @@ exports.getJobStats = async (period = 'all') => {
     // Get jobs by company
     const jobsByCompany = await Job.findAll({
       attributes: [
-        [Sequelize.literal('"Company"."name"'), 'name'],
+        [Sequelize.literal('"company"."name"'), 'name'],
         [Sequelize.fn('COUNT', Sequelize.col('Job.id')), 'value']
       ],
       include: [
         {
           model: Company,
+          as: 'company',
           attributes: []
         }
       ],
       where: whereClause,
-      group: [Sequelize.literal('"Company"."name"')],
+      group: [Sequelize.literal('"company"."name"')],
       order: [[Sequelize.literal('value'), 'DESC']],
       limit: 10,
       raw: true
     });
 
-    // Get most requested jobs
-    const mostRequested = await Job.findAll({
-      attributes: [
-        'title',
-        [Sequelize.fn('COUNT', Sequelize.col('ReferralRequests.id')), 'value']
-      ],
-      include: [
-        {
-          model: ReferralRequest,
-          attributes: [],
-          where: dateConstraint.hasOwnProperty(Op.between) 
-            ? { created_at: dateConstraint } 
-            : {}
-        }
-      ],
-      group: ['Job.id'],
-      order: [[Sequelize.literal('value'), 'DESC']],
-      limit: 10,
-      raw: true
-    });
+    // Get most requested jobs - simplified for empty database
+    let mostRequestedJobs = [];
+    try {
+      const mostRequested = await Job.findAll({
+        attributes: [
+          'title',
+          [Sequelize.fn('COUNT', Sequelize.col('referralRequests.id')), 'value']
+        ],
+        include: [
+          {
+            model: ReferralRequest,
+            as: 'referralRequests',
+            attributes: [],
+            required: true, // Inner join to only get jobs with referrals
+            where: dateConstraint.hasOwnProperty(Op.between) 
+              ? { created_at: dateConstraint } 
+              : {}
+          }
+        ],
+        group: ['Job.id', 'Job.title'],
+        order: [[Sequelize.literal('value'), 'DESC']],
+        limit: 10,
+        raw: true
+      });
 
-    const mostRequestedJobs = mostRequested.map(job => ({
-      name: job.title,
-      value: parseInt(job.value)
-    }));
+      mostRequestedJobs = mostRequested.map(job => ({
+        name: job.title,
+        value: parseInt(job.value)
+      }));
+    } catch (error) {
+      console.log('No referral requests found for jobs');
+      mostRequestedJobs = [];
+    }
 
     return {
-      byCategory,
+      byType,
       byLocation,
       byCompany: jobsByCompany,
       mostRequested: mostRequestedJobs

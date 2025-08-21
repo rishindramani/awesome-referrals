@@ -1,4 +1,4 @@
-const { Job, Company, JobSkill, Skill, User, SavedJob } = require('../models');
+const { Job, Company, User, SavedJob } = require('../models');
 const { Op } = require('sequelize');
 const { AppError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
@@ -76,8 +76,9 @@ exports.getJobs = async (req, res, next) => {
         {
           model: Company,
           as: 'company',
-          where: companyFilter,
-          attributes: ['id', 'name', 'logo_url', 'website']
+          where: Object.keys(companyFilter).length > 0 ? companyFilter : undefined,
+          attributes: ['id', 'name', 'logo_url', 'website'],
+          required: Object.keys(companyFilter).length > 0
         }
       ],
       offset,
@@ -88,25 +89,22 @@ exports.getJobs = async (req, res, next) => {
     
     // Add skills filter if provided
     if (skillsArray.length > 0) {
-      query.include.push({
-        model: Skill,
-        as: 'skills',
-        attributes: ['id', 'name'],
-        through: { attributes: [] },
-        where: {
-          name: { [Op.in]: skillsArray }
-        }
-      });
-    } else {
-      // Include skills without filtering
-      query.include.push({
-        model: Skill,
-        as: 'skills',
-        attributes: ['id', 'name'],
-        through: { attributes: [] }
-      });
+      // For now, handle skills as a simple text field search in requirements
+      const skillConditions = skillsArray.map(skill => ({
+        requirements: { [Op.iLike]: `%${skill}%` }
+      }));
+      
+      if (whereConditions[Op.and]) {
+        whereConditions[Op.and].push({
+          [Op.or]: skillConditions
+        });
+      } else {
+        whereConditions[Op.and] = [{
+          [Op.or]: skillConditions
+        }];
+      }
     }
-    
+
     // Execute query
     const { rows, count } = await Job.findAndCountAll(query);
     
@@ -341,12 +339,6 @@ exports.getJob = async (req, res, next) => {
           model: Company,
           as: 'company',
           attributes: ['id', 'name', 'logo_url', 'website', 'description']
-        },
-        {
-          model: Skill,
-          as: 'skills',
-          attributes: ['id', 'name'],
-          through: { attributes: [] }
         }
       ]
     });
@@ -414,12 +406,6 @@ exports.getSavedJobs = async (req, res, next) => {
           model: Company,
           as: 'company',
           attributes: ['id', 'name', 'logo_url', 'website']
-        },
-        {
-          model: Skill,
-          as: 'skills',
-          attributes: ['id', 'name'],
-          through: { attributes: [] }
         }
       ],
       offset,
@@ -555,40 +541,8 @@ exports.createJob = async (req, res, next) => {
       return next(new AppError('Company not found', 404));
     }
     
-    // Create job
-    const job = await Job.create({
-      title,
-      description,
-      company_id,
-      location,
-      is_remote,
-      job_type,
-      experience_level,
-      salary_min,
-      salary_max,
-      responsibilities,
-      requirements,
-      benefits,
-      application_url,
-      expiry_date,
-      created_by: req.user.id
-    });
-    
-    // Add skills if provided
-    if (skills && Array.isArray(skills) && skills.length > 0) {
-      // Find or create each skill
-      const skillPromises = skills.map(async (skillName) => {
-        const [skill] = await Skill.findOrCreate({
-          where: { name: skillName.trim().toLowerCase() }
-        });
-        return skill;
-      });
-      
-      const skillInstances = await Promise.all(skillPromises);
-      
-      // Associate skills with job
-      await job.setSkills(skillInstances);
-    }
+    // Create job (no skills handling for now)
+    const job = await Job.create(jobData);
     
     // Fetch the complete job with relations
     const newJob = await Job.findByPk(job.id, {
@@ -597,12 +551,6 @@ exports.createJob = async (req, res, next) => {
           model: Company,
           as: 'company',
           attributes: ['id', 'name', 'logo_url', 'website']
-        },
-        {
-          model: Skill,
-          as: 'skills',
-          attributes: ['id', 'name'],
-          through: { attributes: [] }
         }
       ]
     });
@@ -652,7 +600,7 @@ exports.updateJob = async (req, res, next) => {
       return next(new AppError('You do not have permission to update this job', 403));
     }
     
-    // Update job
+    // Update job (no skills handling for now)
     await job.update({
       title,
       description,
@@ -669,22 +617,6 @@ exports.updateJob = async (req, res, next) => {
       expiry_date
     });
     
-    // Update skills if provided
-    if (skills && Array.isArray(skills)) {
-      // Find or create each skill
-      const skillPromises = skills.map(async (skillName) => {
-        const [skill] = await Skill.findOrCreate({
-          where: { name: skillName.trim().toLowerCase() }
-        });
-        return skill;
-      });
-      
-      const skillInstances = await Promise.all(skillPromises);
-      
-      // Replace existing skills with new ones
-      await job.setSkills(skillInstances);
-    }
-    
     // Fetch updated job with relations
     const updatedJob = await Job.findByPk(id, {
       include: [
@@ -692,12 +624,6 @@ exports.updateJob = async (req, res, next) => {
           model: Company,
           as: 'company',
           attributes: ['id', 'name', 'logo_url', 'website']
-        },
-        {
-          model: Skill,
-          as: 'skills',
-          attributes: ['id', 'name'],
-          through: { attributes: [] }
         }
       ]
     });
@@ -755,12 +681,6 @@ exports.getTrendingJobs = async (req, res, next) => {
           model: Company,
           as: 'company',
           attributes: ['id', 'name', 'logo_url']
-        },
-        {
-          model: Skill,
-          as: 'skills',
-          attributes: ['id', 'name'],
-          through: { attributes: [] }
         }
       ],
       order: [['created_at', 'DESC']],

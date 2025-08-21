@@ -17,6 +17,7 @@ const jobRoutes = require('./routes/job.routes');
 const referralRoutes = require('./routes/referral.routes');
 const companyRoutes = require('./routes/company.routes');
 const notificationRoutes = require('./routes/notification.routes');
+const recommendationRoutes = require('./routes/recommendation.routes');
 // Add our new routes
 const conversationRoutes = require('./routes/conversation.routes');
 const messageRoutes = require('./routes/message.routes');
@@ -103,6 +104,7 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/stats', statsRoutes);
